@@ -13,7 +13,17 @@ import {
 } from "../core/index.js";
 import { jobcodesForExcel } from "../config.js";
 import { getConfig, saveConfig, resetConfig } from "./config-store.js";
-import { renderBanner, renderStats, renderValidation, renderPM, renderIssues, renderConfig } from "./render.js";
+import {
+  renderBanner,
+  renderStats,
+  renderValidation,
+  filterValidation,
+  validationTable,
+  renderPM,
+  renderIssues,
+  renderConfig,
+} from "./render.js";
+import { icon } from "./icons.js";
 
 const XLSX = window.XLSX;
 const ExcelJS = window.ExcelJS;
@@ -44,13 +54,30 @@ const state = {
   weeks: [],
   R: null,
   tab: "validacion",
+  filter: { q: "", soloProblemas: false },
 };
 
 init();
 
 async function init() {
   state.cfg = await getConfig();
+  injectIcons();
   wireEvents();
+}
+
+// Iconos SVG inyectados desde el módulo (una sola fuente, sin duplicar en el HTML).
+function injectIcons() {
+  const logo = $("logo");
+  if (logo) logo.innerHTML = icon.clock(24);
+  const dropIcon = $("dropIcon");
+  if (dropIcon) dropIcon.innerHTML = icon.upload(26);
+  el.download.insertAdjacentHTML("afterbegin", icon.download(16));
+  el.copy.insertAdjacentHTML("afterbegin", icon.copy(16));
+  const tabIcons = { validacion: icon.check(16), pm: icon.userClock(16), incidencias: icon.alert(16), config: icon.settings(16) };
+  document.querySelectorAll("nav.tabs button").forEach((b) => {
+    const ic = tabIcons[b.dataset.tab];
+    if (ic) b.insertAdjacentHTML("afterbegin", ic);
+  });
 }
 
 function wireEvents() {
@@ -149,12 +176,15 @@ function mergedParsed() {
 }
 
 function renderFiles() {
+  el.drop.classList.toggle("compact", state.timesheetFiles.length > 0);
   const xIcon =
     '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  const fileIcon =
+    '<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>';
   el.files.innerHTML = state.timesheetFiles
     .map(
       (f, i) =>
-        `<li>${escapeHtml(f.name)}${f.clientOnly ? " (solo Job Codes)" : ""}<button class="x" data-rm="${i}" title="Quitar" aria-label="Quitar ${escapeHtml(f.name)}">${xIcon}</button></li>`
+        `<li>${fileIcon}${escapeHtml(f.name)}${f.clientOnly ? " (solo Job Codes)" : ""}<button class="x" data-rm="${i}" title="Quitar" aria-label="Quitar ${escapeHtml(f.name)}">${xIcon}</button></li>`
     )
     .join("");
   el.files.querySelectorAll("button[data-rm]").forEach((b) =>
@@ -223,7 +253,7 @@ function renderPanel() {
     el.panel.innerHTML = `<div class="empty">Carga archivos para ver el reporte.</div>`;
     return;
   }
-  if (state.tab === "validacion") el.panel.innerHTML = renderValidation(state.R);
+  if (state.tab === "validacion") el.panel.innerHTML = renderValidation(state.R, state.filter);
   else if (state.tab === "pm") el.panel.innerHTML = renderPM(state.R);
   else if (state.tab === "incidencias") el.panel.innerHTML = renderIssues(state.R);
 }
@@ -274,6 +304,21 @@ async function copyForClient() {
 // ---------- Configuración ----------
 function onConfigInput(e) {
   const t = e.target;
+
+  // Filtro de la tabla de Validación: actualiza solo el cuerpo para no perder el foco.
+  if (t.id === "valSearch" || t.id === "valSolo") {
+    if (t.id === "valSearch") state.filter.q = t.value;
+    else state.filter.soloProblemas = t.checked;
+    if (state.R) {
+      const filtered = filterValidation(state.R, state.filter);
+      const body = document.getElementById("valBody");
+      const count = document.getElementById("valCount");
+      if (body) body.innerHTML = validationTable(state.R, filtered);
+      if (count) count.textContent = `${filtered.length} de ${state.R.validation.length}`;
+    }
+    return;
+  }
+
   if (!t.matches("[data-param], [data-r], [data-a], [data-fer], #cfgKeywords")) return;
 
   if (t.dataset.param) {

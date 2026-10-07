@@ -2,6 +2,7 @@
 // (salvo la configuración, que se cablea por delegación en app.js).
 
 import { fmtDay, isWeekend } from "../core/index.js";
+import { icon } from "./icons.js";
 
 export function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -9,6 +10,7 @@ export function esc(s) {
 
 const f2 = (n) => Number(n).toFixed(2);
 const f4 = (n) => Number(n).toFixed(4);
+const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
 /** Semáforo de "¿lista para entregar?" con lo que falta por resolver. */
 export function renderBanner(R) {
@@ -19,13 +21,13 @@ export function renderBanner(R) {
 
   if (bloqueos === 0) {
     const extra = jobCodes ? ` Revisa ${jobCodes} Job Code(s) desconocido(s) antes de entregar.` : "";
-    return `<div class="banner ok" role="status"><strong>Lista para entregar.</strong> Ningún recurso fijo fuera de rango.${extra}</div>`;
+    return `<div class="banner ok" role="status">${icon.check()}<div><strong>Lista para entregar.</strong> Ningún recurso fijo fuera de rango.${extra}</div></div>`;
   }
   const partes = [];
   if (fijosFuera) partes.push(`${fijosFuera} recurso(s) fijo(s) fuera de rango`);
   if (sinRoster) partes.push(`${sinRoster} persona(s) sin equipo`);
   if (jobCodes) partes.push(`${jobCodes} Job Code(s) desconocido(s)`);
-  return `<div class="banner" role="alert"><strong>Falta revisar:</strong> ${partes.join(" · ")}.</div>`;
+  return `<div class="banner" role="alert">${icon.alert()}<div><strong>Falta revisar:</strong> ${partes.join(" · ")}.</div></div>`;
 }
 
 export function renderStats(R) {
@@ -33,26 +35,41 @@ export function renderStats(R) {
   const onDemandHoras = R.validation.filter((v) => v.tipo === "On demand").reduce((s, v) => s + v.total, 0);
   const horasPM = R.pm.reduce((s, p) => s + p.horasPM, 0);
   const cards = [
-    ["Semana", esc(R.label), false],
-    ["Registros DEV", R.dev.length, false],
-    ["Personas", R.validation.length, false],
-    ["Fijos fuera de rango", fijosFuera, fijosFuera > 0],
-    ["Horas on demand", f2(onDemandHoras), false],
-    ["Horas PM", f2(horasPM), false],
-    ["Incidencias", R.issues.length, R.issues.length > 0],
+    [icon.calendar(), esc(R.label), "Semana", false],
+    [icon.rows(), R.dev.length, "Registros DEV", false],
+    [icon.users(), R.validation.length, "Personas", false],
+    [icon.alert(), fijosFuera, "Fijos fuera de rango", fijosFuera > 0],
+    [icon.clock(), f2(onDemandHoras), "Horas on demand", false],
+    [icon.userClock(), f2(horasPM), "Horas PM", false],
+    [icon.alert(), R.issues.length, "Incidencias", R.issues.length > 0],
   ];
   return cards
-    .map(([label, val, bad]) => `<div class="stat ${bad ? "bad" : ""}"><b>${val}</b><span>${esc(label)}</span></div>`)
+    .map(
+      ([ic, val, label, bad]) =>
+        `<div class="stat ${bad ? "bad" : ""}"><div class="si">${ic}</div><div><b>${val}</b><span>${esc(label)}</span></div></div>`
+    )
     .join("");
 }
 
-export function renderValidation(R) {
-  if (R.validation.length === 0) return `<div class="empty">Sin personas en el rango.</div>`;
+export function filterValidation(R, filter = {}) {
+  const q = (filter.q || "").trim().toLowerCase();
+  const solo = !!filter.soloProblemas;
+  return R.validation.filter((v) => {
+    if (solo && !(v.tipo === "Fijo" && v.estado !== "OK")) return false;
+    if (q && !(v.dev.toLowerCase().includes(q) || v.equipo.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+/** Tabla de validación (solo el cuerpo filtrable, sin el toolbar). */
+export function validationTable(R, filtered) {
+  if (filtered.length === 0) return `<div class="empty">Sin resultados para el filtro.</div>`;
   const days = R.days;
   const holidays = new Set(R.holidays || []);
   const names = R.holidayNames || {};
+
   const head =
-    `<tr><th>Recurso</th><th>Tipo</th>` +
+    `<thead><tr><th>Recurso</th><th>Tipo</th>` +
     days
       .map((d) => {
         const shaded = isWeekend(d) || holidays.has(d);
@@ -61,10 +78,10 @@ export function renderValidation(R) {
         return `<th class="n ${shaded ? "wk" : ""}"${title}>${esc(fmtDay(d))}${mark}</th>`;
       })
       .join("") +
-    `<th class="n">Total</th><th>Estado</th></tr>`;
+    `<th class="n">Total</th><th>Estado</th></tr></thead>`;
 
   const rowsByTeam = {};
-  for (const v of R.validation) (rowsByTeam[v.equipo] ||= []).push(v);
+  for (const v of filtered) (rowsByTeam[v.equipo] ||= []).push(v);
 
   let body = "";
   for (const team of Object.keys(rowsByTeam)) {
@@ -74,7 +91,7 @@ export function renderValidation(R) {
         .map((d) => {
           const h = v.perDay[d] || 0;
           const shaded = isWeekend(d) || holidays.has(d);
-          const redDay = v.tipo === "Fijo" && !shaded && (h < R.params.minDia || h > R.params.maxDia);
+          const redDay = v.tipo === "Fijo" && !shaded && (round2(h) < R.params.minDia || round2(h) > R.params.maxDia);
           const cls = redDay ? "n bad" : shaded ? "n wk" : "n";
           return `<td class="${cls}">${h ? f2(h) : shaded ? "" : "0"}</td>`;
         })
@@ -83,25 +100,41 @@ export function renderValidation(R) {
         v.tipo === "On demand"
           ? `<span class="chip od">${esc(v.estado)}</span>`
           : v.estado === "OK"
-          ? `<span class="chip ok">OK</span>`
-          : `<span class="chip bad">${esc(v.estado)}</span>`;
+          ? `<span class="chip ok">${icon.check(14)} OK</span>`
+          : `<span class="chip bad">${icon.alert(14)} ${esc(v.estado)}</span>`;
       body += `<tr><td>${esc(v.dev)}</td><td>${esc(v.tipo)}</td>${cells}<td class="n">${f2(v.total)}</td><td>${chip}</td></tr>`;
     }
   }
+  return `<div class="scroll"><table>${head}<tbody>${body}</tbody></table></div>`;
+}
+
+export function renderValidation(R, filter = {}) {
+  if (R.validation.length === 0) return `<div class="empty">Sin personas en el rango.</div>`;
+  const names = R.holidayNames || {};
+  const filtered = filterValidation(R, filter);
+
+  const toolbar =
+    `<div class="toolbar">` +
+    `<div class="searchbox">${icon.search()}<input id="valSearch" type="search" placeholder="Buscar persona o equipo" value="${esc(filter.q || "")}"></div>` +
+    `<label class="toggle"><input id="valSolo" type="checkbox" ${filter.soloProblemas ? "checked" : ""}> Solo fuera de rango</label>` +
+    `<span class="count" id="valCount">${filtered.length} de ${R.validation.length}</span>` +
+    `</div>`;
+
   const nota =
     (R.holidays || []).length > 0
       ? `<p class="note">* Feriado (no cuenta como día hábil): ${R.holidays
           .map((d) => `${esc(fmtDay(d))} ${esc(names[d] || "")}`)
           .join(" · ")}.</p>`
       : "";
-  return `${nota}<div class="scroll"><table>${head}${body}</table></div>`;
+
+  return `${nota}${toolbar}<div id="valBody">${validationTable(R, filtered)}</div>`;
 }
 
 export function renderPM(R) {
   if (R.pm.length === 0) return `<div class="empty">Sin horas de PM en el rango.</div>`;
   const head =
-    `<tr><th>Equipo</th><th>Día</th><th>PM</th><th class="n">DEVs fijos</th><th class="n">Horas fijos</th>` +
-    `<th class="n">Promedio</th><th class="n">Horas PM</th><th class="n">Tareas</th><th class="n">Por tarea</th></tr>`;
+    `<thead><tr><th>Equipo</th><th>Día</th><th>PM</th><th class="n">DEVs fijos</th><th class="n">Horas fijos</th>` +
+    `<th class="n">Promedio</th><th class="n">Horas PM</th><th class="n">Tareas</th><th class="n">Por tarea</th></tr></thead>`;
   let body = "";
   for (const p of R.pm) {
     body +=
@@ -109,7 +142,7 @@ export function renderPM(R) {
       `<td class="n">${p.devsFijos}</td><td class="n">${f2(p.horasFijos)}</td><td class="n">${f2(p.prom)}</td>` +
       `<td class="n"><b>${p.horasPM}</b></td><td class="n">${p.tareas}</td><td class="n">${p.tareas ? f4(p.porTarea) : "–"}</td></tr>`;
   }
-  return `<div class="scroll"><table>${head}${body}</table></div>`;
+  return `<div class="scroll"><table>${head}<tbody>${body}</tbody></table></div>`;
 }
 
 export function renderIssues(R) {
@@ -123,7 +156,7 @@ export function renderIssues(R) {
   for (const t of Object.keys(byType)) {
     const list = byType[t];
     out += `<h3 style="font-size:15px;color:var(--accent);margin:16px 0 4px">${esc(list[0].tipo.replace(/^(.*?)(:|$).*/, (m, a) => a))} <span style="color:var(--muted);font-weight:400">· ${list.length}</span></h3>`;
-    out += `<div class="scroll"><table><tr><th>Archivo</th><th>Pestaña</th><th class="n">Fila</th><th>Detalle</th></tr>`;
+    out += `<div class="scroll"><table><thead><tr><th>Archivo</th><th>Pestaña</th><th class="n">Fila</th><th>Detalle</th></tr></thead><tbody>`;
     for (const i of list) {
       const m = /^"(.+)" no está en Equipos$/.exec(i.tipo);
       const action = m
@@ -131,7 +164,7 @@ export function renderIssues(R) {
         : "";
       out += `<tr><td>${esc(i.file)}</td><td>${esc(i.tab)}</td><td class="n">${esc(i.row)}</td><td>${esc(i.tipo)}${i.detalle ? " — " + esc(i.detalle) : ""}${action}</td></tr>`;
     }
-    out += `</table></div>`;
+    out += `</tbody></table></div>`;
   }
   return out;
 }
@@ -189,26 +222,26 @@ export function renderConfig(cfg) {
       <button id="cfgReset">Restaurar valores iniciales</button>
       <span id="cfgState" class="saveState"></span>
     </div>
-    <h3>Parámetros</h3>
+    <h3>${icon.settings(16)} Parámetros</h3>
     <div class="row">${paramRows}</div>
 
-    <h3>Palabras clave de reuniones</h3>
+    <h3>${icon.search(16)} Palabras clave de reuniones</h3>
     <p class="note">Una por línea. Usa <code>·</code> para representar un espacio (los espacios importan: <code>·pm·</code>).</p>
     <textarea id="cfgKeywords" rows="8" style="width:280px;font-family:monospace">${esc(kw)}</textarea>
 
-    <h3>Equipos (roster)</h3>
+    <h3>${icon.users(16)} Equipos (roster)</h3>
     <div class="scroll"><table id="cfgRoster">
       <tr><th>DEV</th><th>Equipo</th><th>PM</th><th>Tipo</th><th>Cuenta PM</th></tr>${roster}
     </table></div>
     <button id="cfgAddPerson" style="margin-top:8px">+ Agregar persona</button>
 
-    <h3>Alias de Job Codes</h3>
+    <h3>${icon.briefcase(16)} Alias de Job Codes</h3>
     <div class="scroll"><table id="cfgAliases">
       <tr><th>Como lo escriben</th><th>Código correcto</th></tr>${aliases}
     </table></div>
     <button id="cfgAddAlias" style="margin-top:8px">+ Agregar alias</button>
 
-    <h3>Feriados</h3>
+    <h3>${icon.calendar(16)} Feriados</h3>
     <p class="note">Los feriados no cuentan como día hábil: bajan el mínimo/máximo de horas y no generan horas de PM.</p>
     <div class="scroll"><table id="cfgFeriados">
       <tr><th>Fecha</th><th>Nombre</th></tr>${feriados}
