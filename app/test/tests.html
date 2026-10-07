@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pruebas · Timesheet core</title>
+    <script src="../vendor/xlsx.full.min.js"></script>
+    <style>
+      body {
+        font: 15px/1.5 "Segoe UI", system-ui, sans-serif;
+        margin: 24px auto;
+        max-width: 820px;
+        color: #17202a;
+      }
+      h1 { font-size: 20px; }
+      h3 { margin: 18px 0 4px; font-size: 15px; color: #1f3864; }
+      ul { list-style: none; padding-left: 0; margin: 0; }
+      li { padding: 2px 0; }
+      li.ok { color: #1e7b4a; }
+      li.fail { color: #a8381f; font-weight: 600; }
+      .err { color: #a8381f; font-weight: 400; font-size: 13px; margin-left: 18px; }
+      .summary { font-weight: 700; padding: 10px 12px; border-radius: 6px; margin-bottom: 12px; }
+      .summary.ok { background: #ddf2e6; color: #1e7b4a; }
+      .summary.fail { background: #fbe3dc; color: #a8381f; }
+    </style>
+  </head>
+  <body>
+    <h1>Pruebas del core · Timesheet</h1>
+    <div id="out">Cargando…</div>
+    <script type="module" src="./run.js"></script>
+  </body>
+</html>

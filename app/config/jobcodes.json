@@ -1,0 +1,930 @@
+[
+ {
+  "client": "ABS",
+  "jobCode": 56599
+ },
+ {
+  "client": "AFBAR",
+  "jobCode": 25053
+ },
+ {
+  "client": "AFRPA",
+  "jobCode": 66481
+ },
+ {
+  "client": "AHA",
+  "jobCode": 67367
+ },
+ {
+  "client": "ALBNM",
+  "jobCode": 13722
+ },
+ {
+  "client": "AMHU",
+  "jobCode": 56604
+ },
+ {
+  "client": "ANHNY",
+  "jobCode": 13721
+ },
+ {
+  "client": "ARLIA",
+  "jobCode": 13762
+ },
+ {
+  "client": "ATHGA",
+  "jobCode": 14193
+ },
+ {
+  "client": "ATLFB",
+  "jobCode": 33687
+ },
+ {
+  "client": "BCMNY",
+  "jobCode": 52204
+ },
+ {
+  "client": "BFF",
+  "jobCode": 56651
+ },
+ {
+  "client": "BRIF",
+  "jobCode": 115101
+ },
+ {
+  "client": "BUFNY",
+  "jobCode": 14144
+ },
+ {
+  "client": "BUCINT",
+  "jobCode": 118172
+ },
+ {
+  "client": "BVRPA",
+  "jobCode": 26521
+ },
+ {
+  "client": "CAMNJ",
+  "jobCode": 13779
+ },
+ {
+  "client": "CASSC",
+  "jobCode": 28252
+ },
+ {
+  "client": "CBS",
+  "jobCode": 56664
+ },
+ {
+  "client": "CCBMA",
+  "jobCode": 48929
+ },
+ {
+  "client": "CCFCA",
+  "jobCode": 22021
+ },
+ {
+  "client": "CCSM",
+  "jobCode": 35157
+ },
+ {
+  "client": "CCYNG",
+  "jobCode": 85190
+ },
+ {
+  "client": "CFBAZ",
+  "jobCode": 71554
+ },
+ {
+  "client": "CGMOH",
+  "jobCode": 35989
+ },
+ {
+  "client": "CI",
+  "jobCode": 56609
+ },
+ {
+  "client": "CLVOH",
+  "jobCode": 13777
+ },
+ {
+  "client": "CNEMO",
+  "jobCode": 14164
+ },
+ {
+  "client": "COM",
+  "jobCode": 56612
+ },
+ {
+  "client": "CQR",
+  "jobCode": 65347
+ },
+ {
+  "client": "CRMNC",
+  "jobCode": 74095
+ },
+ {
+  "client": "CRMOK",
+  "jobCode": 28474
+ },
+ {
+  "client": "CHCOH",
+  "jobCode": 115624
+ },
+ {
+  "client": "CSTOH",
+  "jobCode": 43378
+ },
+ {
+  "client": "CTYCA",
+  "jobCode": 30639
+ },
+ {
+  "client": "DAYFL",
+  "jobCode": 13812
+ },
+ {
+  "client": "DIRCTR",
+  "jobCode": 98153
+ },
+ {
+  "client": "DRMCO",
+  "jobCode": 40399
+ },
+ {
+  "client": "EFACO",
+  "jobCode": 13792
+ },
+ {
+  "client": "EPFTX",
+  "jobCode": 13793
+ },
+ {
+  "client": "ESPNM",
+  "jobCode": 13794
+ },
+ {
+  "client": "FBANC",
+  "jobCode": 36689
+ },
+ {
+  "client": "FBCCS",
+  "jobCode": 17224
+ },
+ {
+  "client": "FBCLA",
+  "jobCode": 14180
+ },
+ {
+  "client": "FBKAK",
+  "jobCode": 14996
+ },
+ {
+  "client": "FBLNE",
+  "jobCode": 14188
+ },
+ {
+  "client": "FBEAL",
+  "jobCode": 14184
+ },
+ {
+  "client": "FBNIN",
+  "jobCode": 14194
+ },
+ {
+  "client": "FBLCO",
+  "jobCode": 14189
+ },
+ {
+  "client": "FBNYC",
+  "jobCode": 14198
+ },
+ {
+  "client": "FBODE",
+  "jobCode": 14183
+ },
+ {
+  "client": "FCCTX",
+  "jobCode": 14209
+ },
+ {
+  "client": "FCENC",
+  "jobCode": 14211
+ },
+ {
+  "client": "FCMCO",
+  "jobCode": 43516
+ },
+ {
+  "client": "FFTP",
+  "jobCode": 56614
+ },
+ {
+  "client": "FGHMI",
+  "jobCode": 13798
+ },
+ {
+  "client": "FINCA",
+  "jobCode": 14215
+ },
+ {
+  "client": "FLYWHL",
+  "jobCode": 95729
+ },
+ {
+  "client": "FNELA",
+  "jobCode": 14185
+ },
+ {
+  "client": "FREVA",
+  "jobCode": 14173
+ },
+ {
+  "client": "FSDCO",
+  "jobCode": 35606
+ },
+ {
+  "client": "FSTNY",
+  "jobCode": 14201
+ },
+ {
+  "client": "FTBFL",
+  "jobCode": 35155
+ },
+ {
+  "client": "FTC",
+  "jobCode": 67945
+ },
+ {
+  "client": "GBRFB",
+  "jobCode": 27833
+ },
+ {
+  "client": "GDB",
+  "jobCode": 56616
+ },
+ {
+  "client": "GDOOH",
+  "jobCode": 42855
+ },
+ {
+  "client": "GNMIN",
+  "jobCode": 42125
+ },
+ {
+  "client": "GRNSC",
+  "jobCode": 13808
+ },
+ {
+  "client": "HACAP",
+  "jobCode": 13810
+ },
+ {
+  "client": "HAVRM",
+  "jobCode": 43827
+ },
+ {
+  "client": "HAVAL",
+  "jobCode": 17996
+ },
+ {
+  "client": "HCOCO",
+  "jobCode": 92023
+ },
+ {
+  "client": "HCSFL",
+  "jobCode": 93038
+ },
+ {
+  "client": "HFBTX",
+  "jobCode": 52358
+ },
+ {
+  "client": "HHMOH",
+  "jobCode": 37650
+ },
+ {
+  "client": "HHSTX",
+  "jobCode": 13813
+ },
+ {
+  "client": "HTMCA",
+  "jobCode": 74103
+ },
+ {
+  "client": "HLOAZ",
+  "jobCode": 13811
+ },
+ {
+  "client": "HSCGA",
+  "jobCode": 13818
+ },
+ {
+  "client": "HSUTH",
+  "jobCode": 24183
+ },
+ {
+  "client": "HRVSTR",
+  "jobCode": 110703
+ },
+ {
+  "client": "HUMMO",
+  "jobCode": 27222
+ },
+ {
+  "client": "IFBID",
+  "jobCode": 36098
+ },
+ {
+  "client": "IFCJ",
+  "jobCode": 91376
+ },
+ {
+  "client": "INDIN",
+  "jobCode": 45083
+ },
+ {
+  "client": "INVCA",
+  "jobCode": 13856
+ },
+ {
+  "client": "JOHOK",
+  "jobCode": 30645
+ },
+ {
+  "client": "LAACA",
+  "jobCode": 13866
+ },
+ {
+  "client": "LAM",
+  "jobCode": 56618
+ },
+ {
+  "client": "LASPC",
+  "jobCode": 28248
+ },
+ {
+  "client": "LCH",
+  "jobCode": 56619
+ },
+ {
+  "client": "LCI",
+  "jobCode": 56620
+ },
+ {
+  "client": "LCIF",
+  "jobCode": 56621
+ },
+ {
+  "client": "LNKNE",
+  "jobCode": 13783
+ },
+ {
+  "client": "LOROH",
+  "jobCode": 14231
+ },
+ {
+  "client": "LRCC",
+  "jobCode": 74368
+ },
+ {
+  "client": "LSSOH",
+  "jobCode": 48930
+ },
+ {
+  "client": "MALFB",
+  "jobCode": 14234
+ },
+ {
+  "client": "MANNA",
+  "jobCode": 14235
+ },
+ {
+  "client": "MAUHI",
+  "jobCode": 14236
+ },
+ {
+  "client": "MFBMT",
+  "jobCode": 15430
+ },
+ {
+  "client": "MFNMS",
+  "jobCode": 14112
+ },
+ {
+  "client": "MHRNY",
+  "jobCode": 14115
+ },
+ {
+  "client": "MHSMI",
+  "jobCode": 29198
+ },
+ {
+  "client": "MIAFL",
+  "jobCode": 13822
+ },
+ {
+  "client": "MICRM",
+  "jobCode": 43251
+ },
+ {
+  "client": "MIDOH",
+  "jobCode": 15429
+ },
+ {
+  "client": "MIGSM",
+  "jobCode": 43251
+ },
+ {
+  "client": "MMAF",
+  "jobCode": 56628
+ },
+ {
+  "client": "MSKMI",
+  "jobCode": 74109
+ },
+ {
+  "client": "MSMIL",
+  "jobCode": 74110
+ },
+ {
+  "client": "MSV",
+  "jobCode": 56629
+ },
+ {
+  "client": "MWKWI",
+  "jobCode": 28661
+ },
+ {
+  "client": "NASTN",
+  "jobCode": 53104
+ },
+ {
+  "client": "NCFMN",
+  "jobCode": 14238
+ },
+ {
+  "client": "NEBNE",
+  "jobCode": 26090
+ },
+ {
+  "client": "NEFIA",
+  "jobCode": 14239
+ },
+ {
+  "client": "NMSS",
+  "jobCode": 99116
+ },
+ {
+  "client": "NTFB",
+  "jobCode": 56638
+ },
+ {
+  "client": "NWMHS",
+  "jobCode": 13827
+ },
+ {
+  "client": "OMANE",
+  "jobCode": 14186
+ },
+ {
+  "client": "ODMR",
+  "jobCode": 74113
+ },
+ {
+  "client": "ORLFL",
+  "jobCode": 14138
+ },
+ {
+  "client": "PANCAN",
+  "jobCode": 56640
+ },
+ {
+  "client": "PRGL",
+  "jobCode": 112510
+ },
+ {
+  "client": "PAOFL",
+  "jobCode": 14121
+ },
+ {
+  "client": "PAZRM",
+  "jobCode": 37754
+ },
+ {
+  "client": "PENVA",
+  "jobCode": 14204
+ },
+ {
+  "client": "PEOIL",
+  "jobCode": 14244
+ },
+ {
+  "client": "PHHSE",
+  "jobCode": 69130
+ },
+ {
+  "client": "PHSCA",
+  "jobCode": 14125
+ },
+ {
+  "client": "PLAVA",
+  "jobCode": 14128
+ },
+ {
+  "client": "POTRI",
+  "jobCode": 14126
+ },
+ {
+  "client": "PRCH",
+  "jobCode": 58775
+ },
+ {
+  "client": "PRMOR",
+  "jobCode": 28568
+ },
+ {
+  "client": "PSPCA",
+  "jobCode": 30555
+ },
+ {
+  "client": "R3MMM",
+  "jobCode": 43251
+ },
+ {
+  "client": "RBFIL",
+  "jobCode": 14245
+ },
+ {
+  "client": "RKD MC",
+  "jobCode": 33095
+ },
+ {
+  "client": "RKD AW",
+  "jobCode": 34936
+ },
+ {
+  "client": "RKD DIS",
+  "jobCode": 66353
+ },
+ {
+  "client": "RKD DMC",
+  "jobCode": 66352
+ },
+ {
+  "client": "RKD DS",
+  "jobCode": 33095
+ },
+ {
+  "client": "RKD FB",
+  "jobCode": 34934
+ },
+ {
+  "client": "RKD HA",
+  "jobCode": 80614
+ },
+ {
+  "client": "RKD HH",
+  "jobCode": 80615
+ },
+ {
+  "client": "RKD Idle",
+  "jobCode": 64468
+ },
+ {
+  "client": "RKD MIN",
+  "jobCode": 80616
+ },
+ {
+  "client": "RKD Mtg",
+  "jobCode": 33095
+ },
+ {
+  "client": "RKD MtgInt",
+  "jobCode": 64466
+ },
+ {
+  "client": "RKD Prod",
+  "jobCode": 64469
+ },
+ {
+  "client": "RKD PTO",
+  "jobCode": 64467
+ },
+ {
+  "client": "RKD HOL",
+  "jobCode": 64467
+ },
+ {
+  "client": "RKD RM",
+  "jobCode": 34935
+ },
+ {
+  "client": "RKD SAM",
+  "jobCode": 38982
+ },
+ {
+  "client": "RKD Train",
+  "jobCode": 33095
+ },
+ {
+  "client": "RKD TSA",
+  "jobCode": 80617
+ },
+ {
+  "client": "RMSLC",
+  "jobCode": 42268
+ },
+ {
+  "client": "ORMUT",
+  "jobCode": 42268
+ },
+ {
+  "client": "SPKWA",
+  "jobCode": 14142
+ },
+ {
+  "client": "SNWPA",
+  "jobCode": 14257
+ },
+ {
+  "client": "SANTX",
+  "jobCode": 14133
+ },
+ {
+  "client": "SARFL",
+  "jobCode": 13831
+ },
+ {
+  "client": "SCS",
+  "jobCode": 74120
+ },
+ {
+  "client": "SCUS",
+  "jobCode": 45982
+ },
+ {
+  "client": "SDFCA",
+  "jobCode": 14250
+ },
+ {
+  "client": "SDHCA",
+  "jobCode": 45984
+ },
+ {
+  "client": "SEAWA",
+  "jobCode": 49438
+ },
+ {
+  "client": "SEVVA",
+  "jobCode": 14202
+ },
+ {
+  "client": "SFHSD",
+  "jobCode": 15320
+ },
+ {
+  "client": "SFSCA",
+  "jobCode": 100237
+ },
+ {
+  "client": "SHMTN",
+  "jobCode": 52421
+ },
+ {
+  "client": "SIOIA",
+  "jobCode": 14203
+ },
+ {
+  "client": "SJL",
+  "jobCode": 56643
+ },
+ {
+  "client": "SJSCA",
+  "jobCode": 14260
+ },
+ {
+  "client": "SMI",
+  "jobCode": 56645
+ },
+ {
+  "client": "SNCMN",
+  "jobCode": 14263
+ },
+ {
+  "client": "SNHNH",
+  "jobCode": 74350
+ },
+ {
+  "client": "SWCNC",
+  "jobCode": 14257
+ },
+ {
+  "client": "SOUWI",
+  "jobCode": 14261
+ },
+ {
+  "client": "SPCTX",
+  "jobCode": 28465
+ },
+ {
+  "client": "STHFL",
+  "jobCode": 74353
+ },
+ {
+  "client": "STMAZ",
+  "jobCode": 16359
+ },
+ {
+  "client": "SWCNC",
+  "jobCode": 14143
+ },
+ {
+  "client": "SXFSD",
+  "jobCode": 20025
+ },
+ {
+  "client": "TAFB",
+  "jobCode": 95626
+ },
+ {
+  "client": "TALFL",
+  "jobCode": 35603
+ },
+ {
+  "client": "TPAFL",
+  "jobCode": 109181
+ },
+ {
+  "client": "TALMD",
+  "jobCode": 14149
+ },
+ {
+  "client": "TBMNY",
+  "jobCode": 66396
+ },
+ {
+  "client": "TCH",
+  "jobCode": 56646
+ },
+ {
+  "client": "TEXAR",
+  "jobCode": 14228
+ },
+ {
+  "client": "TFT",
+  "jobCode": 66480
+ },
+ {
+  "client": "THFIN",
+  "jobCode": 14269
+ },
+ {
+  "client": "THQSOU",
+  "jobCode": 76428
+ },
+ {
+  "client": "THREE",
+  "jobCode": 14270
+ },
+ {
+  "client": "TLRCA",
+  "jobCode": 15697
+ },
+ {
+  "client": "TOLOH",
+  "jobCode": 13823
+ },
+ {
+  "client": "TSAE-HQ",
+  "jobCode": 44340
+ },
+ {
+  "client": "TSAE-MAS",
+  "jobCode": 38706
+ },
+ {
+  "client": "TSAE-NEO",
+  "jobCode": 38687
+ },
+ {
+  "client": "TSAE-NNE",
+  "jobCode": 38702
+ },
+ {
+  "client": "TSAE-SWO",
+  "jobCode": 38689
+ },
+ {
+  "client": "TSAE-WPA",
+  "jobCode": 38692
+ },
+ {
+  "client": "TSAGS",
+  "jobCode": 63684
+ },
+ {
+  "client": "TSAIM",
+  "jobCode": 85582
+ },
+ {
+  "client": "TSANW",
+  "jobCode": 56659
+ },
+ {
+  "client": "UFBUT",
+  "jobCode": 14272
+ },
+ {
+  "client": "UGMTC",
+  "jobCode": 74361
+ },
+ {
+  "client": "UMMVA",
+  "jobCode": 52660
+ },
+ {
+  "client": "UNICEF-CAN",
+  "jobCode": 31280
+ },
+ {
+  "client": "USAS",
+  "jobCode": 60482
+ },
+ {
+  "client": "VENCA",
+  "jobCode": 13797
+ },
+ {
+  "client": "VVMF",
+  "jobCode": 56660
+ },
+ {
+  "client": "WESOH",
+  "jobCode": 22246
+ },
+ {
+  "client": "WFM",
+  "jobCode": 74365
+ },
+ {
+  "client": "WHMWI",
+  "jobCode": 42404
+ },
+ {
+  "client": "WPBFL",
+  "jobCode": 44732
+ },
+ {
+  "client": "XCOFB",
+  "jobCode": 14165
+ },
+ {
+  "client": "XCPFB",
+  "jobCode": 14166
+ },
+ {
+  "client": "XCVTX",
+  "jobCode": 25846
+ },
+ {
+  "client": "XFBRO",
+  "jobCode": 14199
+ },
+ {
+  "client": "XHPFB",
+  "jobCode": 24435
+ },
+ {
+  "client": "XLOLC",
+  "jobCode": 14285
+ },
+ {
+  "client": "XMENC",
+  "jobCode": 14255
+ },
+ {
+  "client": "XNOLA",
+  "jobCode": 14286
+ },
+ {
+  "client": "XROFB",
+  "jobCode": 14247
+ },
+ {
+  "client": "XSHET",
+  "jobCode": 14287
+ },
+ {
+  "client": "XSLFB",
+  "jobCode": 14262
+ },
+ {
+  "client": "XWCFB",
+  "jobCode": 14277
+ },
+ {
+  "client": "XWYRO",
+  "jobCode": 14199
+ }
+]

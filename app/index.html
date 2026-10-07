@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Reporte semanal de horas</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+    <script src="./vendor/xlsx.full.min.js"></script>
+    <script src="./vendor/exceljs.min.js"></script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <div>
+          <h1>Reporte semanal de horas</h1>
+          <div class="sub">Sube los exports del timesheet, elige la semana y descarga el Excel. Todo se procesa en tu navegador.</div>
+        </div>
+        <div class="row" style="gap:8px">
+          <button id="btnCopy" disabled>Copiar para el cliente (B:I)</button>
+          <button id="btnDownload" class="primary" disabled>Descargar Excel</button>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div id="drop" class="drop" tabindex="0" role="button" aria-label="Cargar archivos">
+          <strong>Arrastra aquí</strong> los <code>.xlsx</code> / <code>.xlsm</code>, o haz clic para elegirlos.
+          <input id="file" type="file" accept=".xlsx,.xlsm" multiple class="hidden" />
+        </div>
+        <ul id="files" class="files"></ul>
+      </section>
+
+      <section id="controls" class="panel hidden">
+        <div class="row">
+          <label class="f">Semana
+            <select id="week"></select>
+          </label>
+          <label class="f">Desde
+            <input id="from" type="date" />
+          </label>
+          <label class="f">Hasta
+            <input id="to" type="date" />
+          </label>
+          <div class="grow"></div>
+          <span id="status" class="saveState"></span>
+        </div>
+      </section>
+
+      <div id="report" class="hidden">
+        <div id="banner"></div>
+        <div id="stats" class="stats"></div>
+        <nav class="tabs" role="tablist">
+          <button role="tab" data-tab="validacion" aria-selected="true">Validación</button>
+          <button role="tab" data-tab="pm" aria-selected="false">Horas PM</button>
+          <button role="tab" data-tab="incidencias" aria-selected="false">Incidencias</button>
+          <button role="tab" data-tab="config" aria-selected="false">Configuración</button>
+        </nav>
+        <div id="panel" class="tabpanel"></div>
+      </div>
+
+      <div id="empty" class="empty">Aún no has cargado ningún archivo.</div>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <script type="module" src="./src/ui/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+# Datos reales (privacidad): nunca publicar timesheets con nombres reales.
+# Anonimizar antes de versionar como fixtures (ver docs/05-casos-de-prueba.md).
+/*.xlsx
+app/test/fixtures/*.xlsx
+app/test/_out.xlsx
+
+# Archivos del sistema
+.DS_Store
+**/.DS_Store
+
+# Editor / temporales
+*.log
+.vscode/

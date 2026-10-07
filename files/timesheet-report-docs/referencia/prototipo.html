@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reporte semanal de horas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+ --bg:#EEF1F4;--surface:#FFFFFF;--ink:#17202A;--muted:#5A6573;--line:#D5DBE2;--accent:#1F3864;--accent-ink:#FFFFFF;
+ --ok:#1E7B4A;--ok-bg:#DDF2E6;--bad:#A8381F;--bad-bg:#FBE3DC;--pm:#E6F0E0;--wk:#F2F4F6;--input:#FFF7DA}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12171D;--surface:#1A2129;--ink:#E6EAEE;--muted:#9AA5B1;--line:#2E3843;--accent:#8FB2E8;--accent-ink:#0E1620;--ok:#6FD39C;--ok-bg:#183527;--bad:#F09A82;--bad-bg:#3D2019;--pm:#1F2E22;--wk:#202830;--input:#2E2A1A}}
+:root[data-theme="dark"]{--bg:#12171D;--surface:#1A2129;--ink:#E6EAEE;--muted:#9AA5B1;--line:#2E3843;--accent:#8FB2E8;--accent-ink:#0E1620;--ok:#6FD39C;--ok-bg:#183527;--bad:#F09A82;--bad-bg:#3D2019;--pm:#1F2E22;--wk:#202830;--input:#2E2A1A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Source Sans 3","Segoe UI",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 18px 60px}
+header.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+h1{font-size:26px;line-height:1.15;margin:0;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin-top:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:14px}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.drop{border:1.5px dashed var(--line);border-radius:6px;padding:18px;text-align:center;cursor:pointer;color:var(--muted)}
+.drop.over{border-color:var(--accent);color:var(--ink)}
+.drop strong{color:var(--ink)}
+.files{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.files li{background:var(--wk);border:1px solid var(--line);border-radius:4px;padding:4px 6px 4px 10px;font-size:13px;display:flex;gap:8px;align-items:center}
+button{font:inherit;cursor:pointer;border-radius:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600;padding:9px 16px}
+button.primary:disabled{opacity:.45;cursor:not-allowed}
+button.x{border:0;background:none;padding:0 4px;color:var(--muted);font-size:16px;line-height:1}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+select,input{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:5px 8px}
+label.f{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:4px;padding:10px 12px}
+.stat b{display:block;font-size:22px;line-height:1.1}.stat span{font-size:13px;color:var(--muted)}
+.stat.bad{border-left-color:var(--bad)}
+nav.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:0;overflow-x:auto}
+nav.tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;padding:10px 14px;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.tabpanel{background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 6px 6px;padding:16px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:13px;background:var(--surface);position:sticky;top:0}
+td.n,th.n{text-align:right}
+tr.grp td{background:var(--wk);font-weight:700;padding-top:10px}
+td.bad{background:var(--bad-bg);color:var(--bad);font-weight:600}
+td.wk{background:var(--wk)}
+.chip{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.bad{background:var(--bad-bg);color:var(--bad)}.chip.od{background:var(--wk);color:var(--muted)}
+.note{font-size:13.5px;color:var(--muted);margin:0 0 12px;max-width:78ch}
+.banner{background:var(--bad-bg);color:var(--ink);border-radius:4px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+.banner button{margin:4px 6px 0 0;font-size:13px;padding:3px 8px}
+.cfg h3{font-size:16px;margin:18px 0 6px}.cfg h3:first-child{margin-top:0}
+.cfg input,.cfg select{background:var(--input);width:100%}
+.cfg td{padding:3px 4px;border:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.kw{display:flex;flex-wrap:wrap;gap:6px}.kw input{width:120px;font-family:ui-monospace,Consolas,monospace;white-space:pre}
+.empty{padding:28px 10px;text-align:center;color:var(--muted)}
+.save{font-size:13px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:4px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><h1>Reporte semanal de horas</h1><div class="sub">Consolida los timesheets, valida horas por recurso y calcula las horas del PM. <span class="save" id="saveState"></span></div></div>
+    <button class="primary" id="btnDownload" disabled>Descargar Excel</button>
+  </header>
+
+  <section class="panel">
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Agregar exports del timesheet">
+      <strong>Arrastra aquí los exports del timesheet</strong> o haz clic para elegirlos. Puedes cargar los de todos los equipos a la vez.
+      <input type="file" id="fileIn" accept=".xlsx,.xlsm,.xls" multiple hidden>
+    </div>
+    <ul class="files" id="fileList"></ul>
+    <div class="row" style="margin-top:12px">
+      <label class="f">Semana<select id="weekSel"><option value="">Carga un timesheet primero</option></select></label>
+      <label class="f">Desde<input type="date" id="dFrom"></label>
+      <label class="f">Hasta<input type="date" id="dTo"></label>
+      <span class="sub" id="jcState"></span>
+    </div>
+  </section>
+
+  <div class="stats" id="stats"></div>
+
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-tab="val" aria-selected="true">Validación</button>
+    <button role="tab" data-tab="pm" aria-selected="false">Horas PM</button>
+    <button role="tab" data-tab="inc" aria-selected="false">Incidencias</button>
+    <button role="tab" data-tab="cfg" aria-selected="false">Configuración</button>
+  </nav>
+  <div class="tabpanel" id="tabBody"></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+/* Lógica del reporte de timesheet. Sin dependencias del DOM. */
+(function (G) {
+  const DAY = 86400000;
+  const pad = n => String(n).padStart(2, "0");
+  const iso = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  const fromIso = s => new Date(s + "T00:00:00Z");
+  const serialToIso = n => iso(new Date(Math.round((n - 25569) * DAY)));
+  const dow = s => fromIso(s).getUTCDay();               // 0 dom .. 6 sáb
+  const isWeekend = s => dow(s) === 0 || dow(s) === 6;
+  const MES = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
+  const DIA = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+  const fmtDay = s => `${DIA[dow(s)]} ${s.slice(8)}/${s.slice(5, 7)}`;
+  const daysBetween = (a, b) => { const out = []; for (let t = fromIso(a).getTime(); t <= fromIso(b).getTime(); t += DAY) out.push(iso(new Date(t))); return out; };
+  const key = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+  const clean = s => String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  const txt = v => (v == null ? "" : String(v));
+
+  const DEFAULT_PARAMS = { minDia: 8, maxDia: 9, umbral: 8.5, pmNormal: 8, pmAlta: 9 };
+
+  /* ---------- lectura de exports (SheetJS) ---------- */
+  function parseTimesheetWorkbook(XLSX, wb, fileName) {
+    const rows = [], issues = [], tabs = [];
+    for (const name of wb.SheetNames) {
+      const aoa = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, defval: null });
+      let h = -1, cols = {};
+      for (let i = 0; i < Math.min(5, aoa.length); i++) {
+        const m = {}; (aoa[i] || []).forEach((v, j) => { if (v != null) m[key(v)] = j; });
+        if ("client" in m && "hours" in m) { h = i; cols = m; break; }
+      }
+      if (h < 0) continue;
+      const g = (r, k) => (k in cols ? r[cols[k]] : null);
+      let n = 0;
+      for (let i = h + 1; i < aoa.length; i++) {
+        const r = aoa[i] || [], rowNum = i + 1, where = { file: fileName, tab: name, row: rowNum };
+        const client = g(r, "client"), task = g(r, "task name"), comm = g(r, "comments"),
+              typ = g(r, "type of task"), date = g(r, "date"), res = g(r, "resource"), hrs = g(r, "hours");
+        const hasTask = clean(task) !== "" , hasClient = clean(client) !== "";
+        if (!hasTask && !hasClient && res == null && date == null) continue;
+        let d = null;
+        if (typeof date === "number") d = serialToIso(date);
+        else if (date instanceof Date) d = iso(new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())));
+        if (!hasTask && !hasClient) {
+          if (typeof hrs === "number" && hrs) rows.push({ kind: "subtotal", ...where, date: d, res: clean(res), hrs });
+          continue;
+        }
+        if (!d || clean(res) === "") { issues.push({ ...where, date: d, tipo: "Fila incompleta (sin fecha o sin Resource): no se incluye", detalle: clean(task).slice(0, 90) }); continue; }
+        n++;
+        rows.push({ kind: "data", ...where, client: clean(client), task: clean(task), comm: comm == null ? "" : clean(comm), typ: clean(typ),
+                    date: d, res: clean(res), hrs: typeof hrs === "number" ? hrs : null });
+      }
+      tabs.push({ file: fileName, tab: name, rows: n });
+    }
+    return { rows, issues, tabs };
+  }
+
+  function parseJobCodes(XLSX, wb) {
+    const name = wb.SheetNames.find(s => key(s) === "jobcodes");
+    if (!name) return null;
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, defval: null });
+    const out = [];
+    for (let i = 1; i < aoa.length; i++) { const r = aoa[i] || []; if (clean(r[0]) && r[1] != null && clean(r[1]) !== "") out.push([clean(r[0]), r[1]]); }
+    return out;
+  }
+
+  /* ---------- semanas disponibles ---------- */
+  function weeksFromRows(rows) {
+    const dates = [...new Set(rows.filter(r => r.date).map(r => r.date))].sort();
+    const weeks = new Map();
+    for (const d of dates) {
+      const t = fromIso(d), mon = new Date(t.getTime() - ((t.getUTCDay() + 6) % 7) * DAY), sun = new Date(mon.getTime() + 6 * DAY);
+      let a = iso(mon), b = iso(sun);
+      const m0 = d.slice(0, 7);                                        // recortar al mes del dato
+      if (a.slice(0, 7) !== m0) a = m0 + "-01";
+      if (b.slice(0, 7) !== m0) { const e = new Date(Date.UTC(+m0.slice(0, 4), +m0.slice(5, 7), 0)); b = iso(e); }
+      const k = a + "|" + b;
+      if (!weeks.has(k)) weeks.set(k, { from: a, to: b, n: 0 });
+      weeks.get(k).n++;
+    }
+    return [...weeks.values()].map(w => ({ ...w, label: weekLabel(w.from, w.to) }));
+  }
+  function weekLabel(a, b) {
+    const wd = daysBetween(a, b).filter(d => !isWeekend(d));
+    const x = wd[0] || a, y = wd[wd.length - 1] || b;
+    return `${+x.slice(8)}-${+y.slice(8)} ${MES[+y.slice(5, 7) - 1]}`;
+  }
+
+  /* ---------- reglas ---------- */
+  function normClient(raw, task, aliasMap, known) {
+    let c = clean(raw);
+    if (!c && task) c = clean(String(task).slice(0, 5));
+    c = c.replace(/:+$/, "").trim();
+    const up = c.toUpperCase();
+    if (aliasMap[up]) return aliasMap[up];
+    if (up.startsWith("RKD")) return up === "RKD MTG INT" ? "RKD MTGINT" : up;
+    return known.has(up) ? up : c;
+  }
+  function meetingCounts(r, keywords) {
+    const t = " " + (r.typ + " " + r.task + " " + r.comm).toLowerCase() + " ";
+    return keywords.some(k => k !== "" && t.includes(String(k).toLowerCase()));
+  }
+  function autoCount(r, person, keywords) {
+    if (person && person.cuentaPM === "No") return "No";
+    const c = r.client.toUpperCase();
+    if (!c.startsWith("RKD")) return "Sí";
+    if (c === "RKD MTG" || c === "RKD MTGINT") return meetingCounts(r, keywords) ? "Sí" : "No";
+    return "No";
+  }
+
+  /* ---------- cálculo principal ---------- */
+  function compute(parsed, cfg, from, to) {
+    const params = { ...DEFAULT_PARAMS, ...(cfg.params || {}) };
+    const keywords = (cfg.keywords || []).filter(k => k !== "" && k != null);
+    const known = new Set((cfg.jobcodes || []).map(j => String(j[0]).toUpperCase()));
+    const aliasMap = {}; (cfg.aliases || []).forEach(a => { if (a.de && a.a) aliasMap[clean(a.de).toUpperCase()] = clean(a.a); });
+    const roster = (cfg.roster || []).filter(p => clean(p.dev));
+    const byKey = new Map(roster.map(p => [key(p.dev), p]));
+    const teamPM = {}; roster.forEach(p => { if (p.equipo && clean(p.pm) && !teamPM[p.equipo]) teamPM[p.equipo] = clean(p.pm); });
+    const days = daysBetween(from, to), weekdays = days.filter(d => !isWeekend(d));
+    const inRange = d => d && d >= from && d <= to;
+    const issues = parsed.issues.filter(i => !i.date || inRange(i.date)).map(i => ({ ...i }));
+    const unknownPeople = new Map(), pmOwnRows = new Map();
+
+    const dev = [];
+    for (const r of parsed.rows) {
+      if (!inRange(r.date)) continue;
+      if (r.kind === "subtotal") { issues.push({ file: r.file, tab: r.tab, row: r.row, tipo: "Fila sin Client ni Task Name con horas: no se incluye (¿subtotal u horas sin descripción?)", detalle: `${fmtDay(r.date)} · ${r.hrs} h` }); continue; }
+      const person = byKey.get(key(r.res));
+      if (!person) unknownPeople.set(key(r.res), r.res);
+      if (person && person.tipo === "No incluir") continue;
+      if (person && person.tipo === "PM") { pmOwnRows.set(person.dev, (pmOwnRows.get(person.dev) || 0) + 1); continue; }
+      const client = normClient(r.client, r.task, aliasMap, known);
+      const tipo = person ? (person.tipo || "Fijo") : "Fijo";
+      const row = { ...r, client, res: person ? person.dev : r.res, equipo: person ? (person.equipo || "SIN EQUIPO") : "SIN EQUIPO", tipo,
+                    cuentaPMPersona: person ? (person.cuentaPM || "Sí") : "Sí" };
+      if (r.hrs == null) { row.hrs = 0; issues.push({ file: r.file, tab: r.tab, row: r.row, tipo: "Fila sin horas (se toma como 0)", detalle: `${fmtDay(r.date)} · ${r.task.slice(0, 80)}` }); }
+      if (!known.has(client.toUpperCase())) issues.push({ file: r.file, tab: r.tab, row: r.row, tipo: `Job Code "${client}" no existe en JobCodes`, detalle: r.task.slice(0, 90) });
+      if (isWeekend(r.date) && tipo !== "On demand") issues.push({ file: r.file, tab: r.tab, row: r.row, tipo: "Recurso fijo con horas en fin de semana", detalle: `${fmtDay(r.date)} · ${r.task.slice(0, 80)}` });
+      row.auto = autoCount(row, person, keywords);
+      dev.push(row);
+    }
+    // duplicados exactos dentro de la misma pestaña
+    const seen = new Map();
+    for (const r of dev) {
+      const k = [r.file, r.tab, r.client, r.task, r.comm, r.date, r.hrs].join("|");
+      if (seen.has(k)) issues.push({ file: r.file, tab: r.tab, row: r.row, tipo: `Posible duplicado de la fila ${seen.get(k)} (se está sumando)`, detalle: `${fmtDay(r.date)} · ${r.task.slice(0, 70)} · ${r.hrs} h` });
+      else seen.set(k, r.row);
+    }
+    for (const [, name] of unknownPeople) issues.push({ file: "", tab: "", row: "", tipo: `"${name}" no está en Equipos`, detalle: "Agrégalo en Configuración para asignarle equipo y tipo" });
+    for (const [name, n] of pmOwnRows) issues.push({ file: "", tab: "", row: "", tipo: `${n} filas propias de ${name} (PM) no se incluyen`, detalle: "Las horas del PM se calculan con la regla del equipo" });
+    const excluded = roster.filter(p => p.tipo === "No incluir").map(p => key(p.dev));
+    const tabExcluded = tab => { const k = key(tab).replace(/\.$/, ""); return k && excluded.some(e => e === k || e.split(" ")[0] === k.split(" ")[0]); };
+    for (const t of parsed.tabs) if (t.rows === 0 && !tabExcluded(t.tab)) issues.push({ file: t.file, tab: t.tab, row: "", tipo: "Pestaña sin registros", detalle: "" });
+
+    const order = r => [r.equipo, r.tipo === "On demand" ? 1 : 0, r.res, r.date].join("|");
+    dev.sort((a, b) => order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0);
+
+    // validación
+    const people = new Map();
+    for (const p of roster) if (p.tipo !== "PM" && p.tipo !== "No incluir") people.set(p.dev, { dev: p.dev, equipo: p.equipo || "SIN EQUIPO", tipo: p.tipo || "Fijo" });
+    for (const r of dev) if (!people.has(r.res)) people.set(r.res, { dev: r.res, equipo: r.equipo, tipo: r.tipo });
+    const validation = [...people.values()].sort((a, b) => (a.equipo + (a.tipo === "On demand" ? 1 : 0) + a.dev).localeCompare(b.equipo + (b.tipo === "On demand" ? 1 : 0) + b.dev)).map(p => {
+      const perDay = {}; days.forEach(d => perDay[d] = 0);
+      dev.filter(r => r.res === p.dev).forEach(r => perDay[r.date] += r.hrs);
+      const total = days.reduce((s, d) => s + perDay[d], 0);
+      let min = null, max = null, estado = "On demand";
+      if (p.tipo !== "On demand") {
+        min = weekdays.length * params.minDia; max = weekdays.length * params.maxDia;
+        estado = total < min - 1e-9 ? `Faltan ${(min - total).toFixed(2)} h` : total > max + 1e-9 ? `Excede ${(total - max).toFixed(2)} h` : "OK";
+      }
+      return { ...p, perDay, total, min, max, estado };
+    });
+
+    // horas PM por equipo y día hábil
+    const teams = [...new Set(dev.map(r => r.equipo))].sort();
+    const pm = [];
+    for (const t of teams) for (const d of weekdays) {
+      const fixedVal = validation.filter(v => v.equipo === t && v.tipo === "Fijo");
+      const devsFijos = fixedVal.filter(v => v.perDay[d] > 0).length;
+      const horasFijos = fixedVal.reduce((s, v) => s + v.perDay[d], 0);
+      const prom = devsFijos ? horasFijos / devsFijos : 0;
+      const tareas = dev.filter(r => r.equipo === t && r.date === d && r.auto === "Sí").length;
+      const horasPM = tareas === 0 ? 0 : prom >= params.umbral ? params.pmAlta : params.pmNormal;
+      pm.push({ equipo: t, date: d, pm: teamPM[t] || "PM SIN ASIGNAR", devsFijos, horasFijos, prom, horasPM, tareas, porTarea: tareas ? horasPM / tareas : 0 });
+    }
+    const weekendTasks = dev.filter(r => isWeekend(r.date) && r.auto === "Sí").length;
+    return { params, keywords, days, weekdays, dev, validation, pm, issues, teamPM, from, to, label: weekLabel(from, to), weekendTasks, roster };
+  }
+
+  /* ---------- Excel de salida (ExcelJS) ---------- */
+  async function buildXlsx(ExcelJS, R, jobcodes) {
+    const wb = new ExcelJS.Workbook();
+    wb.calcProperties.fullCalcOnLoad = true;
+    const F = { name: "Arial", size: 10 }, FB = { ...F, bold: true };
+    const fill = c => ({ type: "pattern", pattern: "solid", fgColor: { argb: "FF" + c } });
+    const HDR = fill("1F3864"), YEL = fill("FFF2CC"), PMF = fill("E2EFDA"), REDF = fill("F8CBAD"), GRNF = fill("C6EFCE");
+    const header = (ws, rowNum, values, startCol = 1) => values.forEach((v, i) => { const c = ws.getCell(rowNum, startCol + i); c.value = v; c.font = { ...FB, color: { argb: "FFFFFFFF" } }; c.fill = HDR; c.alignment = { horizontal: "center", vertical: "middle", wrapText: true }; });
+    const L = n => { let s = ""; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+    const toDate = s => new Date(s + "T00:00:00Z");
+    const setFont = ws => ws.eachRow(r => r.eachCell(c => { if (!c.font || !c.font.bold) c.font = { ...F, ...(c.font && c.font.color ? { color: c.font.color } : {}) }; }));
+
+    const wsC = wb.addWorksheet("Consolidado"), wsV = wb.addWorksheet("Validacion"), wsH = wb.addWorksheet("Horas PM"),
+          wsI = wb.addWorksheet("Incidencias"), wsP = wb.addWorksheet("Parametros"), wsE = wb.addWorksheet("Equipos"), wsJ = wb.addWorksheet("JobCodes");
+
+    // Parametros
+    wsP.getCell("A1").value = "Parámetros del reporte"; wsP.getCell("A1").font = { ...FB, size: 12 };
+    const prm = [["Semana desde", toDate(R.from)], ["Semana hasta", toDate(R.to)], ["Horas mínimas por día (recurso fijo)", R.params.minDia],
+      ["Horas máximas por día (recurso fijo)", R.params.maxDia], ["Promedio del equipo (fijos) para usar jornada alta del PM", R.params.umbral],
+      ["Horas PM por día - jornada normal", R.params.pmNormal], ["Horas PM por día - jornada alta", R.params.pmAlta]];
+    prm.forEach((p, i) => { wsP.getCell(3 + i, 1).value = p[0]; const c = wsP.getCell(3 + i, 2); c.value = p[1]; c.fill = YEL; if (p[1] instanceof Date) c.numFmt = "dd/mm/yyyy"; });
+    const MIN = "Parametros!$B$5", MAX = "Parametros!$B$6", UMB = "Parametros!$B$7", PMN = "Parametros!$B$8", PMA = "Parametros!$B$9";
+    wsP.getCell("A12").value = "Palabras clave de reuniones RKD MTG / RKD MTGINT que SÍ cuentan para el PM"; wsP.getCell("A12").font = FB;
+    wsP.getCell("A13").value = "Se buscan en Type of task + Task Name + Comments. Los espacios al inicio o final importan.";
+    const KW0 = 14; for (let i = 0; i < 40; i++) { const c = wsP.getCell(KW0 + i, 1); c.value = R.keywords[i] != null ? R.keywords[i] : null; c.fill = YEL; }
+    const KWR = `Parametros!$A$${KW0}:$A$${KW0 + 39}`;
+    wsP.getColumn(1).width = 64; wsP.getColumn(2).width = 14;
+
+    // Equipos
+    header(wsE, 1, ["DEV (Resource)", "Equipo", "PM del equipo", "Tipo", "¿Sus tareas cuentan para el PM?"]);
+    R.roster.forEach(p => wsE.addRow([p.dev, p.equipo, p.pm || "", p.tipo || "Fijo", p.cuentaPM || "Sí"]));
+    [28, 20, 26, 12, 16].forEach((w, i) => wsE.getColumn(i + 1).width = w);
+    // JobCodes
+    header(wsJ, 1, ["Client", "JobCode"]); jobcodes.forEach(j => wsJ.addRow(j));
+    const JC = `JobCodes!$A$2:$B$${Math.max(2, jobcodes.length + 1)}`;
+
+    // Consolidado
+    wsC.getCell("B1").value = R.label; wsC.getCell("B1").font = { ...FB, size: 12 };
+    const hdr = ["Job #", "Client", "Task Name", "Comments", "Type of task", "Date", "Resource", "Hours", "Equipo", "Tipo recurso", "Tipo fila", "Cuenta PM (auto)", "Ajuste manual (Sí/No)", "Cuenta PM final", "Origen"];
+    header(wsC, 2, hdr, 2);
+    const r0 = 3;
+    const common = (r, d) => {
+      wsC.getCell(r, 2).value = { formula: `IFERROR(VLOOKUP(C${r},${JC},2,0),"NO EXISTE")` };
+      wsC.getCell(r, 3).value = d.client; wsC.getCell(r, 4).value = d.task; wsC.getCell(r, 5).value = d.comm || null; wsC.getCell(r, 6).value = d.typ || null;
+      const dc = wsC.getCell(r, 7); dc.value = toDate(d.date); dc.numFmt = "dd/mm/yyyy";
+    };
+    R.dev.forEach((d, i) => {
+      const r = r0 + i; common(r, d);
+      wsC.getCell(r, 8).value = d.res; wsC.getCell(r, 9).value = d.hrs; wsC.getCell(r, 10).value = d.equipo; wsC.getCell(r, 11).value = d.tipo; wsC.getCell(r, 12).value = "DEV";
+      const t = `" "&LOWER(F${r}&" "&D${r}&" "&E${r})&" "`;
+      wsC.getCell(r, 13).value = d.cuentaPMPersona === "No" ? "No" : { formula:
+        `IF(LEFT(UPPER(TRIM(C${r})),3)<>"RKD","Sí",IF(OR(UPPER(TRIM(C${r}))="RKD MTG",UPPER(TRIM(C${r}))="RKD MTGINT"),IF(SUMPRODUCT((${KWR}<>"")*ISNUMBER(SEARCH(LOWER(${KWR}),${t})))>0,"Sí","No"),"No"))` };
+      wsC.getCell(r, 14).fill = YEL;
+      wsC.getCell(r, 14).dataValidation = { type: "list", allowBlank: true, formulae: ['"Sí,No"'] };
+      wsC.getCell(r, 15).value = { formula: `IF(N${r}<>"",N${r},M${r})` };
+      wsC.getCell(r, 16).value = `${d.tab} fila ${d.row}`;
+    });
+    const lastDev = r0 + R.dev.length - 1;
+    let r = lastDev + 1;
+    R.dev.forEach((d, i) => {
+      const src = r0 + i, up = d.client.toUpperCase();
+      if (d.cuentaPMPersona === "No") return;
+      if (up.startsWith("RKD") && up !== "RKD MTG" && up !== "RKD MTGINT") return;
+      common(r, d);
+      wsC.getCell(r, 8).value = R.teamPM[d.equipo] || "PM SIN ASIGNAR";
+      wsC.getCell(r, 9).value = { formula: `IF(O${r}="Sí",SUMIFS('Horas PM'!$I:$I,'Horas PM'!$A:$A,J${r},'Horas PM'!$B:$B,G${r}),0)` };
+      wsC.getCell(r, 10).value = d.equipo; wsC.getCell(r, 11).value = "PM"; wsC.getCell(r, 12).value = "PM";
+      wsC.getCell(r, 15).value = { formula: `O${src}` }; wsC.getCell(r, 16).value = `Fila ${src}`;
+      for (let c = 2; c <= 16; c++) wsC.getCell(r, c).fill = PMF;
+      r++;
+    });
+    const last = Math.max(r - 1, r0);
+    for (let i = r0; i <= last; i++) wsC.getCell(i, 9).numFmt = "0.00";
+    wsC.autoFilter = { from: { row: 2, column: 2 }, to: { row: last, column: 16 } };
+    wsC.views = [{ state: "frozen", ySplit: 2 }];
+    [3, 9, 12, 48, 28, 22, 11, 22, 8, 16, 11, 8, 11, 12, 11, 18].forEach((w, i) => wsC.getColumn(i + 1).width = w);
+    wsC.addConditionalFormatting({ ref: `B${r0}:B${last}`, rules: [{ type: "cellIs", operator: "equal", formulae: ['"NO EXISTE"'], style: { fill: REDF } }] });
+    const CR = col => `Consolidado!$${col}$${r0}:$${col}$${last}`;
+
+    // Validacion
+    wsV.getCell("A1").value = "Validación de horas por recurso"; wsV.getCell("A1").font = { ...FB, size: 12 };
+    const nd = R.days.length;
+    header(wsV, 3, ["Recurso", "Equipo", "Tipo", ...R.days.map(fmtDay), "Total", "Mínimo", "Máximo", "Estado"]);
+    R.days.forEach((d, j) => { const c = wsV.getCell(2, 4 + j); c.value = toDate(d); c.numFmt = "dd/mm/yyyy"; c.font = { ...F, size: 8, color: { argb: "FF808080" } }; });
+    const cT = 4 + nd, cMin = cT + 1, cMax = cT + 2, cE = cT + 3;
+    const nWd = R.weekdays.length;
+    R.validation.forEach((v, i) => {
+      const rr = 4 + i;
+      wsV.getCell(rr, 1).value = v.dev; wsV.getCell(rr, 2).value = v.equipo; wsV.getCell(rr, 3).value = v.tipo;
+      R.days.forEach((d, j) => { const c = wsV.getCell(rr, 4 + j); c.value = { formula: `SUMIFS(${CR("I")},${CR("H")},$A${rr},${CR("G")},${L(4 + j)}$2,${CR("L")},"DEV")` }; c.numFmt = "0.00"; if (isWeekend(d)) c.fill = fill("EDEDED"); });
+      wsV.getCell(rr, cT).value = { formula: `SUM(D${rr}:${L(3 + nd)}${rr})` }; wsV.getCell(rr, cT).numFmt = "0.00";
+      const t = `${L(cT)}${rr}`, mn = `${L(cMin)}${rr}`, mx = `${L(cMax)}${rr}`;
+      wsV.getCell(rr, cMin).value = { formula: `IF($C${rr}="On demand","",${nWd}*${MIN})` };
+      wsV.getCell(rr, cMax).value = { formula: `IF($C${rr}="On demand","",${nWd}*${MAX})` };
+      wsV.getCell(rr, cE).value = { formula: `IF($C${rr}="On demand","On demand: "&TEXT(${t},"0.00")&" h en la semana",IF(${t}<${mn},"Faltan "&TEXT(${mn}-${t},"0.00")&" h",IF(${t}>${mx},"Excede "&TEXT(${t}-${mx},"0.00")&" h","OK")))` };
+    });
+    const lv = 3 + Math.max(R.validation.length, 1);
+    R.days.forEach((d, j) => {
+      if (isWeekend(d)) return; const col = L(4 + j);
+      wsV.addConditionalFormatting({ ref: `${col}4:${col}${lv}`, rules: [{ type: "expression", formulae: [`AND($C4="Fijo",OR(${col}4<${MIN},${col}4>${MAX}))`], style: { fill: REDF } }] });
+    });
+    wsV.addConditionalFormatting({ ref: `${L(cE)}4:${L(cE)}${lv}`, rules: [
+      { type: "cellIs", operator: "equal", formulae: ['"OK"'], style: { fill: GRNF } },
+      { type: "expression", formulae: [`AND($C4="Fijo",${L(cE)}4<>"OK")`], style: { fill: REDF } }] });
+    wsV.getColumn(1).width = 24; wsV.getColumn(2).width = 18; wsV.getColumn(3).width = 11; wsV.getColumn(cE).width = 28;
+    wsV.views = [{ state: "frozen", xSplit: 3, ySplit: 3 }];
+
+    // Horas PM
+    header(wsH, 1, ["Equipo", "Fecha", "PM", "DEVs fijos con horas", "Horas de los fijos", "Promedio por DEV fijo", "Horas PM del día", "Tareas que cuentan", "Horas PM por tarea", "Control: total asignado"]);
+    let hr = 2;
+    for (const p of R.pm) {
+      const dcol = L(4 + R.days.indexOf(p.date));
+      wsH.getCell(hr, 1).value = p.equipo; const dc = wsH.getCell(hr, 2); dc.value = toDate(p.date); dc.numFmt = "dd/mm/yyyy";
+      wsH.getCell(hr, 3).value = p.pm;
+      wsH.getCell(hr, 4).value = { formula: `COUNTIFS(Validacion!$B$4:$B$${lv},A${hr},Validacion!$C$4:$C$${lv},"Fijo",Validacion!$${dcol}$4:$${dcol}$${lv},">0")` };
+      wsH.getCell(hr, 5).value = { formula: `SUMIFS(${CR("I")},${CR("J")},A${hr},${CR("G")},B${hr},${CR("K")},"Fijo",${CR("L")},"DEV")` };
+      wsH.getCell(hr, 6).value = { formula: `IFERROR(E${hr}/D${hr},0)` };
+      wsH.getCell(hr, 7).value = { formula: `IF(H${hr}=0,0,IF(F${hr}>=${UMB},${PMA},${PMN}))` };
+      wsH.getCell(hr, 8).value = { formula: `COUNTIFS(${CR("J")},A${hr},${CR("G")},B${hr},${CR("L")},"DEV",${CR("O")},"Sí")` };
+      wsH.getCell(hr, 9).value = { formula: `IFERROR(G${hr}/H${hr},0)` };
+      wsH.getCell(hr, 10).value = { formula: `SUMIFS(${CR("I")},${CR("J")},A${hr},${CR("G")},B${hr},${CR("L")},"PM")` };
+      [5, 6, 7, 9, 10].forEach(c => wsH.getCell(hr, c).numFmt = "0.00");
+      hr++;
+    }
+    wsH.getCell(hr, 1).value = "TOTAL"; wsH.getCell(hr, 1).font = FB;
+    [5, 7, 8, 10].forEach(c => { wsH.getCell(hr, c).value = { formula: `SUM(${L(c)}2:${L(c)}${hr - 1})` }; wsH.getCell(hr, c).numFmt = "0.00"; });
+    wsH.addConditionalFormatting({ ref: `J2:J${Math.max(2, hr - 1)}`, rules: [{ type: "expression", formulae: ["ROUND(J2,2)<>ROUND(G2,2)"], style: { fill: REDF } }] });
+    [18, 11, 24, 10, 10, 10, 10, 10, 10, 12].forEach((w, i) => wsH.getColumn(i + 1).width = w);
+    wsH.views = [{ state: "frozen", ySplit: 1 }];
+
+    // Incidencias
+    header(wsI, 1, ["Archivo", "Pestaña", "Fila", "Incidencia", "Detalle"]);
+    R.issues.forEach(i => wsI.addRow([i.file, i.tab, i.row, i.tipo, i.detalle]));
+    [30, 18, 7, 60, 70].forEach((w, i) => wsI.getColumn(i + 1).width = w);
+
+    [wsC, wsV, wsH, wsI, wsP, wsE, wsJ].forEach(setFont);
+    return wb.xlsx.writeBuffer();
+  }
+
+  G.TS = { parseTimesheetWorkbook, parseJobCodes, weeksFromRows, compute, buildXlsx, fmtDay, isWeekend, DEFAULT_PARAMS, key, weekLabel };
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+(function(){
+const $=s=>document.querySelector(s), esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const f2=n=>(Math.round(n*100)/100).toFixed(2);
+const S={files:[],cfg:{params:{...TS.DEFAULT_PARAMS},keywords:[],roster:[],aliases:[]},jobcodes:[],tab:"val",from:"",to:"",R:null,db:null,dl:null,cfgLoaded:false};
+const LS="timesheet-cfg-v1";
+let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),3200);}
+
+/* ---------- persistencia de la configuración ---------- */
+let saveT=null,saving=false,dirty=false;
+function setSave(t){$("#saveState").textContent=t;}
+function scheduleSave(){dirty=true;setSave("Guardando cambios…");clearTimeout(saveT);saveT=setTimeout(flushSave,800);}
+async function flushSave(){
+  if(saving){saveT=setTimeout(flushSave,400);return;}
+  saving=true;dirty=false;
+  const body=JSON.parse(JSON.stringify(S.cfg));
+  try{
+    if(S.db){await S.db.doc("config/main").set(body);setSave("Configuración guardada y compartida con el equipo.");}
+    else{try{localStorage.setItem(LS,JSON.stringify(body));}catch(e){}setSave("Configuración guardada en este navegador.");}
+  }catch(e){setSave("No se pudo guardar la configuración ("+(e&&e.code||"error")+").");}
+  saving=false;
+}
+async function saveJobcodes(list){
+  S.jobcodes=list;
+  try{ if(S.db) await S.db.doc("config/jobcodes").set({list:list.map(j=>({c:j[0],j:j[1]}))});
+       else localStorage.setItem(LS+"-jc",JSON.stringify(list)); }catch(e){toast("No se pudieron guardar los Job Codes.");}
+}
+function loadLocal(){
+  try{const c=JSON.parse(localStorage.getItem(LS)||"null");if(c)S.cfg=normCfg(c);}catch(e){}
+  try{const j=JSON.parse(localStorage.getItem(LS+"-jc")||"null");if(j)S.jobcodes=j;}catch(e){}
+}
+function normCfg(c){return{params:{...TS.DEFAULT_PARAMS,...(c.params||{})},keywords:[...(c.keywords||[])],roster:(c.roster||[]).map(p=>({...p})),aliases:(c.aliases||[]).map(a=>({...a}))};}
+(async()=>{
+  try{S.dl=await claude.use("downloads");}catch(e){S.dl=null;}
+  let db=null;try{db=await claude.use("db");}catch(e){}
+  if(!db){loadLocal();S.cfgLoaded=true;setSave("Sin conexión al almacenamiento compartido: la configuración se guarda solo en este navegador.");recompute();return;}
+  S.db=db;
+  db.doc("config/main").onSnapshot(snap=>{
+    if(snap.exists&&!dirty&&!saving){
+      S.cfg=normCfg(snap.data());
+      if(!(S.tab==="cfg"&&document.activeElement&&document.activeElement.closest(".cfg"))) recompute();
+    } else if(!snap.exists){loadLocal();}
+    S.cfgLoaded=true;if(!snap.exists)recompute();
+  },e=>setSave("Se perdió la conexión con la configuración compartida."));
+  db.doc("config/jobcodes").onSnapshot(snap=>{
+    if(snap.exists){const d=snap.data();S.jobcodes=(d.list||[]).map(x=>[x.c,x.j]);recompute();}
+  },()=>{});
+})();
+
+/* ---------- archivos ---------- */
+const drop=$("#drop"),fileIn=$("#fileIn");
+drop.addEventListener("click",()=>fileIn.click());
+drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fileIn.click();}});
+drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("over");});
+drop.addEventListener("dragleave",()=>drop.classList.remove("over"));
+drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("over");addFiles(e.dataTransfer.files);});
+fileIn.addEventListener("change",()=>{addFiles(fileIn.files);fileIn.value="";});
+async function addFiles(list){
+  for(const f of list){
+    try{
+      const buf=await f.arrayBuffer();
+      const wb=XLSX.read(buf,{type:"array"});
+      const jc=TS.parseJobCodes(XLSX,wb);
+      if(jc&&jc.length){await saveJobcodes(jc);toast(`Lista de Job Codes actualizada desde ${f.name} (${jc.length} códigos).`);}
+      const parsed=TS.parseTimesheetWorkbook(XLSX,wb,f.name);
+      if(parsed.tabs.length){
+        if(jc&&jc.length&&parsed.tabs.every(t=>/week|detail/i.test(t.tab)))continue; // archivo consolidado: solo se usan los Job Codes
+        S.files=S.files.filter(x=>x.name!==f.name);
+        S.files.push({name:f.name,parsed});
+      } else if(!(jc&&jc.length)) toast(`${f.name} no tiene pestañas con columnas Client y Hours.`);
+    }catch(e){toast(`No se pudo leer ${f.name}.`);}
+  }
+  pickDefaultWeek();renderFiles();recompute();
+}
+function merged(){const m={rows:[],issues:[],tabs:[]};S.files.forEach(f=>{m.rows.push(...f.parsed.rows);m.issues.push(...f.parsed.issues);m.tabs.push(...f.parsed.tabs);});return m;}
+function renderFiles(){
+  $("#fileList").innerHTML=S.files.map((f,i)=>`<li>${esc(f.name)} <span class="sub">${f.parsed.tabs.length} pestañas</span><button class="x" data-rm="${i}" aria-label="Quitar ${esc(f.name)}">×</button></li>`).join("");
+  const weeks=TS.weeksFromRows(merged().rows);
+  const sel=$("#weekSel");
+  sel.innerHTML=weeks.length?weeks.map(w=>`<option value="${w.from}|${w.to}">${w.label} (${w.from.slice(8)}/${w.from.slice(5,7)} al ${w.to.slice(8)}/${w.to.slice(5,7)})</option>`).join("")+`<option value="custom">Rango personalizado</option>`:`<option value="">Carga un timesheet primero</option>`;
+  const v=S.from+"|"+S.to; sel.value=[...sel.options].some(o=>o.value===v)?v:(weeks.length?"custom":"");
+}
+$("#fileList").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;S.files.splice(+b.dataset.rm,1);pickDefaultWeek(true);renderFiles();recompute();});
+function pickDefaultWeek(force){
+  const weeks=TS.weeksFromRows(merged().rows);
+  if(!weeks.length){S.from=S.to="";return;}
+  if(force||!S.from){const w=weeks[weeks.length-1];S.from=w.from;S.to=w.to;}
+  $("#dFrom").value=S.from;$("#dTo").value=S.to;
+}
+$("#weekSel").addEventListener("change",e=>{const v=e.target.value;if(!v||v==="custom")return;[S.from,S.to]=v.split("|");$("#dFrom").value=S.from;$("#dTo").value=S.to;recompute();});
+["#dFrom","#dTo"].forEach(id=>$(id).addEventListener("change",()=>{S.from=$("#dFrom").value;S.to=$("#dTo").value;renderFiles();recompute();}));
+
+/* ---------- cálculo + render ---------- */
+function recompute(){
+  $("#jcState").textContent=S.jobcodes.length?`${S.jobcodes.length} Job Codes cargados. Para actualizarlos, carga el Excel que tiene la pestaña JobCodes.`:"Falta la lista de Job Codes: carga el Excel que tiene la pestaña JobCodes.";
+  S.R=(S.files.length&&S.from&&S.to&&S.from<=S.to)?TS.compute(merged(),{...S.cfg,jobcodes:S.jobcodes},S.from,S.to):null;
+  $("#btnDownload").disabled=!S.R;
+  renderStats();renderTab();
+}
+function renderStats(){
+  const R=S.R;if(!R){$("#stats").innerHTML="";return;}
+  const alerts=R.validation.filter(v=>v.tipo!=="On demand"&&v.estado!=="OK").length;
+  const od=R.validation.filter(v=>v.tipo==="On demand").reduce((s,v)=>s+v.total,0);
+  const pmH=R.pm.reduce((s,p)=>s+p.horasPM,0);
+  $("#stats").innerHTML=`
+   <div class="stat"><b>${esc(R.label)}</b><span>${R.dev.length} registros de ${new Set(R.dev.map(r=>r.res)).size} personas</span></div>
+   <div class="stat ${alerts?"bad":""}"><b>${alerts}</b><span>recursos fijos fuera de rango</span></div>
+   <div class="stat"><b>${f2(od)} h</b><span>horas on demand en la semana</span></div>
+   <div class="stat"><b>${f2(pmH)} h</b><span>horas PM calculadas</span></div>
+   <div class="stat ${R.issues.length?"bad":""}"><b>${R.issues.length}</b><span>incidencias en los datos</span></div>`;
+}
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;S.tab=b.dataset.tab;document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));renderTab();});
+function renderTab(){
+  const body=$("#tabBody");
+  if(S.tab==="cfg"){body.innerHTML=cfgHTML();return;}
+  if(!S.R){body.innerHTML=`<div class="empty">${S.files.length?"Elige una semana válida.":"Carga los exports del timesheet para ver el reporte."}${S.cfg.roster.length?"":"<br>Antes, completa los equipos en Configuración."}</div>`;return;}
+  body.innerHTML=S.tab==="val"?valHTML():S.tab==="pm"?pmHTML():incHTML();
+}
+function unknownBanner(){
+  const unk=S.R.issues.filter(i=>i.tipo.endsWith("no está en Equipos")).map(i=>i.tipo.slice(1,i.tipo.indexOf('"',1)));
+  if(!unk.length)return"";
+  return `<div class="banner">Estas personas no están en Equipos, así que quedan como fijas y sin equipo:<br>${unk.map(n=>`<button data-addp="${esc(n)}">Agregar ${esc(n)}</button>`).join("")}</div>`;
+}
+function valHTML(){
+  const R=S.R,P=R.params;
+  let h=`<p class="note">Recursos fijos: entre ${P.minDia} y ${P.maxDia} h por día hábil (${R.weekdays.length} días hábiles en esta semana). Recursos on demand: solo se suman sus horas, incluido el fin de semana.</p>`+unknownBanner();
+  h+=`<div class="scroll"><table><thead><tr><th>Recurso</th><th>Tipo</th>${R.days.map(d=>`<th class="n">${TS.fmtDay(d)}</th>`).join("")}<th class="n">Total</th><th>Estado</th></tr></thead><tbody>`;
+  let g=null;
+  for(const v of R.validation){
+    if(v.equipo!==g){g=v.equipo;h+=`<tr class="grp"><td colspan="${R.days.length+4}">${esc(g)} <span class="sub">· PM: ${esc(R.teamPM[g]||"sin asignar")}</span></td></tr>`;}
+    h+=`<tr><td>${esc(v.dev)}</td><td>${esc(v.tipo)}</td>`+R.days.map(d=>{const x=v.perDay[d],we=TS.isWeekend(d);const bad=!we&&v.tipo!=="On demand"&&(x<P.minDia-1e-9||x>P.maxDia+1e-9);return `<td class="n ${bad?"bad":we?"wk":""}">${x?f2(x):"–"}</td>`;}).join("")+
+       `<td class="n"><b>${f2(v.total)}</b></td><td>${v.tipo==="On demand"?'<span class="chip od">On demand</span>':`<span class="chip ${v.estado==="OK"?"ok":"bad"}">${esc(v.estado)}</span>`}</td></tr>`;
+  }
+  return h+"</tbody></table></div>";
+}
+function pmHTML(){
+  const R=S.R,P=R.params;
+  let h=`<p class="note">Por cada equipo y día hábil, el PM recibe ${P.pmNormal} h, o ${P.pmAlta} h si el promedio de los DEVs fijos que trabajaron ese día llega a ${P.umbral} h. Esas horas se reparten en partes iguales entre las tareas que cuentan: todo lo que no es RKD y las reuniones RKD MTG / RKD MTGINT que coinciden con las palabras clave.${R.weekendTasks?` ${R.weekendTasks} tareas de fin de semana no generan horas de PM.`:""}</p>`;
+  h+=`<div class="scroll"><table><thead><tr><th>Equipo</th><th>Día</th><th>PM</th><th class="n">DEVs fijos</th><th class="n">Promedio</th><th class="n">Horas PM</th><th class="n">Tareas</th><th class="n">Horas por tarea</th></tr></thead><tbody>`;
+  let g=null;
+  for(const p of R.pm){
+    h+=`<tr${p.equipo!==g?' style="border-top:2px solid var(--line)"':""}><td>${p.equipo!==g?esc(p.equipo):""}</td><td>${TS.fmtDay(p.date)}</td><td>${esc(p.pm)}</td><td class="n">${p.devsFijos}</td><td class="n">${f2(p.prom)}</td><td class="n"><b>${f2(p.horasPM)}</b></td><td class="n">${p.tareas}</td><td class="n">${p.tareas?p.porTarea.toFixed(4):"–"}</td></tr>`;
+    g=p.equipo;
+  }
+  return h+"</tbody></table></div>";
+}
+function incHTML(){
+  const R=S.R;if(!R.issues.length)return`<div class="empty">No se encontraron incidencias para esta semana.</div>`;
+  const groups={};R.issues.forEach(i=>{const k=i.tipo.replace(/"[^"]*"/,'"…"').replace(/de la fila \d+/,"").replace(/^\d+ filas propias de .* \(PM\)/,"Filas propias del PM");(groups[k]=groups[k]||[]).push(i);});
+  let h=`<p class="note">Corrige estos puntos en el timesheet de origen y vuelve a cargarlo. Nada de esto se modifica automáticamente, salvo lo que indica cada mensaje.</p>`+unknownBanner();
+  h+=`<div class="scroll"><table><thead><tr><th>Pestaña</th><th class="n">Fila</th><th>Incidencia</th><th>Detalle</th></tr></thead><tbody>`;
+  for(const k of Object.keys(groups)){h+=`<tr class="grp"><td colspan="4">${esc(k)} <span class="sub">(${groups[k].length})</span></td></tr>`;
+    groups[k].forEach(i=>h+=`<tr><td>${esc(i.tab)}</td><td class="n">${esc(i.row)}</td><td>${esc(i.tipo)}</td><td>${esc(i.detalle)}</td></tr>`);}
+  return h+"</tbody></table></div>";
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-addp]");if(!b)return;S.cfg.roster.push({dev:b.dataset.addp,equipo:"",pm:"",tipo:"Fijo",cuentaPM:"Sí"});scheduleSave();S.tab="cfg";document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x.dataset.tab==="cfg"));recompute();toast(`${b.dataset.addp} agregado. Asígnale equipo y PM.`);});
+
+/* ---------- configuración ---------- */
+function cfgHTML(){
+  const c=S.cfg,p=c.params;
+  const teams=[...new Set(c.roster.map(r=>r.equipo).filter(Boolean))];
+  let h=`<div class="cfg"><p class="note">Estos ajustes se guardan solos y los ve cualquier persona que abra esta página, así todos los PMs usan las mismas reglas.</p>
+  <h3>Horas</h3><div class="grid">
+   ${[["minDia","Mínimo por día (fijos)"],["maxDia","Máximo por día (fijos)"],["umbral","Promedio del equipo para jornada alta del PM"],["pmNormal","Horas PM, jornada normal"],["pmAlta","Horas PM, jornada alta"]].map(([k,l])=>`<label class="f">${l}<input type="number" step="0.25" min="0" data-p="${k}" value="${p[k]}"></label>`).join("")}</div>
+  <h3>Equipos</h3><p class="note">Tipo <b>Fijo</b> se valida contra el rango de horas, <b>On demand</b> solo suma horas de la semana <b>PM</b> excluye las filas propias de esa persona, porque sus horas se calculan, y <b>No incluir</b> deja a la persona fuera del reporte.</p>
+  <datalist id="teamsDL">${teams.map(t=>`<option value="${esc(t)}">`).join("")}</datalist>
+  <div class="scroll"><table><thead><tr><th>Persona (como aparece en Resource)</th><th>Equipo</th><th>PM del equipo</th><th>Tipo</th><th>¿Sus tareas cuentan para el PM?</th><th></th></tr></thead><tbody>
+  ${c.roster.map((r,i)=>`<tr><td><input data-r="${i}" data-k="dev" value="${esc(r.dev)}" aria-label="Persona"></td><td><input data-r="${i}" data-k="equipo" list="teamsDL" value="${esc(r.equipo)}" aria-label="Equipo"></td><td><input data-r="${i}" data-k="pm" value="${esc(r.pm)}" aria-label="PM"></td>
+    <td><select data-r="${i}" data-k="tipo" aria-label="Tipo">${["Fijo","On demand","PM","No incluir"].map(o=>`<option${(r.tipo||"Fijo")===o?" selected":""}>${o}</option>`).join("")}</select></td>
+    <td><select data-r="${i}" data-k="cuentaPM" aria-label="Cuenta para PM">${["Sí","No"].map(o=>`<option${(r.cuentaPM||"Sí")===o?" selected":""}>${o}</option>`).join("")}</select></td>
+    <td><button class="x" data-delr="${i}" aria-label="Quitar ${esc(r.dev)}">×</button></td></tr>`).join("")}
+  </tbody></table></div><button data-addr style="margin-top:8px">Agregar persona</button>
+  <h3>Palabras clave de reuniones que cuentan</h3><p class="note">Aplican solo a RKD MTG y RKD MTGINT. Se buscan en Type of task, Task Name y Comments, sin distinguir mayúsculas. Los espacios cuentan: " pm " evita coincidir con otras palabras.</p>
+  <div class="kw">${c.keywords.map((k,i)=>`<span><input data-kw="${i}" value="${esc(k)}" aria-label="Palabra clave"><button class="x" data-delkw="${i}" aria-label="Quitar">×</button></span>`).join("")}<button data-addkw>Agregar</button></div>
+  <h3>Alias de Job Codes</h3><p class="note">Para códigos que el equipo escribe distinto al oficial.</p>
+  <table style="max-width:460px"><tbody>${c.aliases.map((a,i)=>`<tr><td><input data-a="${i}" data-k="de" value="${esc(a.de)}" aria-label="Como lo escriben"></td><td>→</td><td><input data-a="${i}" data-k="a" value="${esc(a.a)}" aria-label="Código correcto"></td><td><button class="x" data-dela="${i}" aria-label="Quitar">×</button></td></tr>`).join("")}</tbody></table>
+  <button data-adda style="margin-top:8px">Agregar alias</button></div>`;
+  return h;
+}
+const tb=$("#tabBody");
+tb.addEventListener("input",e=>{
+  const t=e.target,c=S.cfg;
+  if(t.dataset.p){const v=parseFloat(t.value);if(!isNaN(v)){c.params[t.dataset.p]=v;scheduleSave();softRecompute();}return;}
+  if(t.dataset.r!=null){c.roster[+t.dataset.r][t.dataset.k]=t.value;scheduleSave();softRecompute();return;}
+  if(t.dataset.kw!=null){c.keywords[+t.dataset.kw]=t.value;scheduleSave();softRecompute();return;}
+  if(t.dataset.a!=null){c.aliases[+t.dataset.a][t.dataset.k]=t.value;scheduleSave();softRecompute();return;}
+});
+tb.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t||!t.closest(".cfg"))return;const c=S.cfg;
+  if("addr" in t.dataset)c.roster.push({dev:"",equipo:"",pm:"",tipo:"Fijo",cuentaPM:"Sí"});
+  else if(t.dataset.delr!=null)c.roster.splice(+t.dataset.delr,1);
+  else if("addkw" in t.dataset)c.keywords.push("");
+  else if(t.dataset.delkw!=null)c.keywords.splice(+t.dataset.delkw,1);
+  else if("adda" in t.dataset)c.aliases.push({de:"",a:""});
+  else if(t.dataset.dela!=null)c.aliases.splice(+t.dataset.dela,1);
+  else return;
+  scheduleSave();recompute();
+});
+function softRecompute(){ // recalcula sin redibujar el formulario que se está editando
+  S.R=(S.files.length&&S.from&&S.to&&S.from<=S.to)?TS.compute(merged(),{...S.cfg,jobcodes:S.jobcodes},S.from,S.to):null;
+  $("#btnDownload").disabled=!S.R;renderStats();
+}
+
+/* ---------- descarga ---------- */
+$("#btnDownload").addEventListener("click",async()=>{
+  if(!S.R)return;
+  if(!S.dl){toast("La descarga no está disponible en esta vista.");return;}
+  const btn=$("#btnDownload");btn.disabled=true;btn.textContent="Generando…";
+  try{
+    const buf=await TS.buildXlsx(ExcelJS,S.R,S.jobcodes);
+    await S.dl.save({filename:`Timesheet ${S.R.label}.xlsx`,data:new Blob([buf])});
+    toast("Excel descargado.");
+  }catch(e){ if(!(e&&e.code==="declined")) toast("No se pudo generar el Excel"+(e&&e.code?` (${e.code})`:"")+"."); }
+  btn.disabled=false;btn.textContent="Descargar Excel";
+});
+recompute();
+})();
+</script>
+</body>
+</html>

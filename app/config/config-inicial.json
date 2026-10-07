@@ -1,0 +1,223 @@
+{
+  "params": {
+    "minDia": 8,
+    "maxDia": 9,
+    "umbral": 8.5,
+    "pmNormal": 8,
+    "pmAlta": 9
+  },
+  "keywords": [
+    "daily",
+    " stand up",
+    "standup",
+    " ops",
+    " pm ",
+    " lead",
+    " team"
+  ],
+  "roster": [
+    {
+      "dev": "Esteban Trejos",
+      "equipo": "Web",
+      "pm": "Maribel Víquez",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Juan Felipe",
+      "equipo": "Web",
+      "pm": "Maribel Víquez",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Tony Aguilar",
+      "equipo": "Web",
+      "pm": "Maribel Víquez",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Yatziry Pacheco",
+      "equipo": "Standard",
+      "pm": "Maria Jose Navarrete",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Jesús López",
+      "equipo": "Standard",
+      "pm": "Maria Jose Navarrete",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Cristian Villamizar",
+      "equipo": "Standard",
+      "pm": "Maria Jose Navarrete",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Jonathan Villamizar",
+      "equipo": "Standard",
+      "pm": "Maria Jose Navarrete",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Carlos Cancines",
+      "equipo": "QA",
+      "pm": "Minor Cascante",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Agustín Cattáneo",
+      "equipo": "QA",
+      "pm": "Minor Cascante",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Silvio Jaime",
+      "equipo": "QA",
+      "pm": "Minor Cascante",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Ester Soto",
+      "equipo": "QA",
+      "pm": "Minor Cascante",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Maria Paula",
+      "equipo": "QA",
+      "pm": "Minor Cascante",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Alfonso Rodriguez",
+      "equipo": "QA",
+      "pm": "Minor Cascante",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "De Francisco Nicolas",
+      "equipo": "QA",
+      "pm": "Minor Cascante",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Minor Cascante",
+      "equipo": "QA",
+      "pm": "Minor Cascante",
+      "tipo": "PM",
+      "cuentaPM": "No"
+    },
+    {
+      "dev": "Andres Rockbrand",
+      "equipo": "QA",
+      "pm": "Minor Cascante",
+      "tipo": "On demand",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Warner Garron",
+      "equipo": "Email",
+      "pm": "Guillermo Quesada",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Kevin Blanco Picado",
+      "equipo": "Email",
+      "pm": "Guillermo Quesada",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Cesar Jesus",
+      "equipo": "Email",
+      "pm": "Guillermo Quesada",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Andres Cordero",
+      "equipo": "Email",
+      "pm": "Guillermo Quesada",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Allan Gamboa",
+      "equipo": "Email",
+      "pm": "Guillermo Quesada",
+      "tipo": "Fijo",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Jorge Cerdas",
+      "equipo": "Email",
+      "pm": "Guillermo Quesada",
+      "tipo": "On demand",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Joselyn Jimenez",
+      "equipo": "Email",
+      "pm": "Guillermo Quesada",
+      "tipo": "On demand",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Juanita Gómez Moreno",
+      "equipo": "Ops",
+      "pm": "",
+      "tipo": "No incluir",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Daniela Sarmiento",
+      "equipo": "Ops",
+      "pm": "",
+      "tipo": "No incluir",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Valentina Bulla",
+      "equipo": "Ops",
+      "pm": "",
+      "tipo": "No incluir",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Liam",
+      "equipo": "Ops",
+      "pm": "",
+      "tipo": "No incluir",
+      "cuentaPM": "Sí"
+    },
+    {
+      "dev": "Catalina Santilli",
+      "equipo": "Ops",
+      "pm": "",
+      "tipo": "No incluir",
+      "cuentaPM": "Sí"
+    }
+  ],
+  "aliases": [
+    {
+      "de": "HCPFB",
+      "a": "HCSFL"
+    }
+  ],
+  "feriados": []
+}
