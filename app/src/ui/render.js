@@ -10,7 +10,6 @@ export function esc(s) {
 }
 
 const f2 = (n) => Number(n).toFixed(2);
-const f4 = (n) => Number(n).toFixed(4);
 const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
 /** Encabezado estándar de cada sección (título + subtítulo + zona derecha). */
@@ -94,6 +93,14 @@ export function validationTable(R, filtered) {
   const rowsByTeam = {};
   for (const v of filtered) (rowsByTeam[v.equipo] ||= []).push(v);
 
+  // Horas del PM por equipo y día (se muestran como una fila más del equipo).
+  const pmByTeam = {};
+  for (const p of R.pm || []) {
+    const t = (pmByTeam[p.equipo] ||= { pm: p.pm, perDay: {}, total: 0 });
+    t.perDay[p.date] = (t.perDay[p.date] || 0) + p.horasPM;
+    t.total += p.horasPM;
+  }
+
   let body = "";
   for (const team of Object.keys(rowsByTeam)) {
     body += `<tr class="grp"><td colspan="${days.length + 4}">${esc(team)}</td></tr>`;
@@ -123,6 +130,18 @@ export function validationTable(R, filtered) {
               .join("")}</div>`
           : "";
       body += `<tr><td>${esc(v.dev)}</td><td>${esc(v.tipo)}</td>${cells}<td class="n">${f2(v.total)}</td><td>${chip}${detalle}</td></tr>`;
+    }
+    // Fila del PM del equipo, con sus horas asignadas por día.
+    const pm = pmByTeam[team];
+    if (pm) {
+      const cells = days
+        .map((d) => {
+          const shaded = isWeekend(d) || holidays.has(d);
+          const h = pm.perDay[d] || 0;
+          return `<td class="n ${shaded ? "wk" : ""}">${h ? f2(h) : shaded ? "" : "0"}</td>`;
+        })
+        .join("");
+      body += `<tr class="pmrow"><td>${esc(pm.pm)}</td><td>PM</td>${cells}<td class="n">${f2(pm.total)}</td><td><span class="chip od">PM</span></td></tr>`;
     }
   }
   return `<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
@@ -229,42 +248,7 @@ export function renderValidation(R, filter = {}) {
     `</div>`;
   const header = pageHeader(icon.check(18), "Validación de horas", `${R.validation.length} personas · semana ${esc(R.label)}`, chips);
 
-  return `${header}${nota}${toolbar}<div id="valBody">${validationTable(R, filtered)}</div>${renderPM(R)}`;
-}
-
-export function renderPM(R) {
-  if (R.pm.length === 0) return `${pageHeader(icon.userClock(18), "Horas del PM", "")}<div class="empty">Sin horas de PM en el rango.</div>`;
-
-  // Resumen por equipo.
-  const byTeam = {};
-  for (const p of R.pm) {
-    const t = (byTeam[p.equipo] ||= { equipo: p.equipo, pm: p.pm, horas: 0, dias: 0, tareas: 0 });
-    t.horas += p.horasPM;
-    if (p.horasPM > 0) t.dias++;
-    t.tareas += p.tareas;
-  }
-  const totalPM = R.pm.reduce((s, p) => s + p.horasPM, 0);
-  const cards = Object.values(byTeam)
-    .map(
-      (t) =>
-        `<div class="teamcard"><h4>${icon.briefcase(14)} ${esc(t.equipo)}</h4>` +
-        `<div class="big">${f2(t.horas)}<small> h PM</small></div>` +
-        `<div class="meta">${esc(t.pm)} · ${t.dias} día(s) · ${t.tareas} tareas</div></div>`
-    )
-    .join("");
-  const header = `<h3 class="subsec">${icon.userClock(16)} Horas del PM <span class="subsec-meta">· ${f2(totalPM)} h por equipo y día hábil</span></h3>`;
-
-  const head =
-    `<thead><tr><th>Equipo</th><th>Día</th><th>PM</th><th class="n">DEVs fijos</th><th class="n">Horas fijos</th>` +
-    `<th class="n">Promedio</th><th class="n">Horas PM</th><th class="n">Tareas</th><th class="n">Por tarea</th></tr></thead>`;
-  let body = "";
-  for (const p of R.pm) {
-    body +=
-      `<tr><td>${esc(p.equipo)}</td><td>${esc(fmtDay(p.date))}</td><td>${esc(p.pm)}</td>` +
-      `<td class="n">${p.devsFijos}</td><td class="n">${f2(p.horasFijos)}</td><td class="n">${f2(p.prom)}</td>` +
-      `<td class="n"><b>${p.horasPM}</b></td><td class="n">${p.tareas}</td><td class="n">${p.tareas ? f4(p.porTarea) : "–"}</td></tr>`;
-  }
-  return `${header}<div class="teamcards">${cards}</div><div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
+  return `${header}${nota}${toolbar}<div id="valBody">${validationTable(R, filtered)}</div>`;
 }
 
 export function renderTasks(R, opts = {}) {
