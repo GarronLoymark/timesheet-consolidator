@@ -176,7 +176,8 @@ for p in roster:
     p["dev"] = display.get(p["dev"], p["dev"])
     if p.get("pm"):
         p["pm"] = display.get(p["pm"], f"{p.get('equipo') or 'X'} PM")
-CFG_PATH.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+# El config real (app/config) NO se toca; el anónimo va a los fixtures de prueba.
+(FIX / "config.anon.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 print("=== MAPEO real -> genérico ===")
 for real in sorted(display, key=lambda s: display[s]):

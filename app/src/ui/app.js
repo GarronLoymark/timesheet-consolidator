@@ -22,7 +22,6 @@ import {
   renderIssues,
   renderConfig,
 } from "./render.js";
-import { icon } from "./icons.js";
 import { HOLIDAYS_2026 } from "../data/holidays.js";
 
 const XLSX = window.XLSX;
@@ -98,7 +97,6 @@ async function init() {
     if (ui.tab) state.tab = ui.tab;
     if (ui.filter) state.filter = { q: ui.filter.q || "", soloProblemas: !!ui.filter.soloProblemas };
     if (ui.options) state.options = { dedupe: !!ui.options.dedupe };
-    injectIcons();
     highlightTab();
     wireEvents();
     el.dedupe.checked = state.options.dedupe;
@@ -120,30 +118,6 @@ function highlightTab() {
   document.querySelectorAll("#nav .navitem").forEach((b) => {
     if (b.dataset.tab === state.tab) b.setAttribute("aria-current", "page");
     else b.removeAttribute("aria-current");
-  });
-}
-
-// Iconos SVG inyectados desde el módulo (una sola fuente, sin duplicar en el HTML).
-function injectIcons() {
-  const logo = $("logo");
-  if (logo) logo.innerHTML = icon.clock(24);
-  const dropIcon = $("dropIcon");
-  if (dropIcon) dropIcon.innerHTML = icon.upload(26);
-  const onboardIcon = $("onboardIcon");
-  if (onboardIcon) onboardIcon.innerHTML = icon.upload(30);
-  el.download.insertAdjacentHTML("afterbegin", icon.download(16));
-  const tabIcons = {
-    resumen: icon.trending(16),
-    tendencia: icon.bars(16),
-    validacion: icon.check(16),
-    pm: icon.userClock(16),
-    tareas: icon.tasks(16),
-    incidencias: icon.alert(16),
-    config: icon.settings(16),
-  };
-  document.querySelectorAll("#nav .navitem").forEach((b) => {
-    const ic = tabIcons[b.dataset.tab];
-    if (ic) b.insertAdjacentHTML("afterbegin", ic);
   });
 }
 

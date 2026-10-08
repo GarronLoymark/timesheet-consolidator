@@ -2,7 +2,6 @@
 // docs/05-casos-de-prueba.md usando los fixtures reales de octubre 2026.
 
 import { describe, it, expect, render } from "./harness.js";
-import { loadConfig } from "../src/config.js";
 import {
   parseTimesheetWorkbook,
   compute,
@@ -35,7 +34,10 @@ async function main() {
   const out = document.getElementById("out");
   out.textContent = "Cargando configuración y fixtures…";
 
-  const cfg = await loadConfig("../config");
+  // Config anónima para pruebas (coincide con los fixtures *.anon.xlsx).
+  const cfgBase = await fetch("./fixtures/config.anon.json").then((r) => r.json());
+  const jc = await fetch("../config/jobcodes.json").then((r) => r.json());
+  const cfg = { ...cfgBase, jobcodes: jc.map((j) => [j.client, j.jobCode]) };
   const known = new Set(cfg.jobcodes.map((j) => String(j[0]).toUpperCase()));
   const aliasMap = {};
   (cfg.aliases || []).forEach((a) => (aliasMap[String(a.de).toUpperCase()] = a.a));
