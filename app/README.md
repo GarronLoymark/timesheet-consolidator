@@ -6,15 +6,20 @@ el procesamiento ocurre en el navegador (privacidad RNF-01).
 
 ## Cómo ejecutar
 
-No necesita build ni Node. Solo un servidor estático (porque usa módulos ES):
+No necesita build ni Node. Solo un servidor estático (porque usa módulos ES).
+Usa el servidor de desarrollo incluido (multihilo y **sin caché**, para que al
+refrescar no se mezclen módulos viejos y nuevos):
 
 ```bash
 cd app
-python3 -m http.server 8777
+python3 tools/serve.py 8777
 ```
 
 Luego abre <http://localhost:8777/index.html>.
 
+> `python3 -m http.server` también funciona, pero cachea; si al refrescar la app
+> se rompe a veces, usa `tools/serve.py`.
+>
 > Para publicarla, copia la carpeta `app/` a cualquier hosting estático
 > (Nginx, GitHub Pages, un recurso compartido interno, etc.).
 

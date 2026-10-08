@@ -90,20 +90,29 @@ function saveUi() {
 init();
 
 async function init() {
-  state.cfg = await getConfig();
-  const ui = loadUi();
-  state.ui = ui;
-  state.overrides = loadOverrides();
-  if (ui.tab) state.tab = ui.tab;
-  if (ui.filter) state.filter = { q: ui.filter.q || "", soloProblemas: !!ui.filter.soloProblemas };
-  if (ui.options) state.options = { dedupe: !!ui.options.dedupe };
-  injectIcons();
-  highlightTab();
-  wireEvents();
-  el.dedupe.checked = state.options.dedupe;
-  // Primer uso: solo el onboarding; la carga y la semana aparecen al subir archivos.
-  el.uploadPanel.classList.add("hidden");
-  el.topbarLeft.classList.add("hidden");
+  try {
+    state.cfg = await getConfig();
+    const ui = loadUi();
+    state.ui = ui;
+    state.overrides = loadOverrides();
+    if (ui.tab) state.tab = ui.tab;
+    if (ui.filter) state.filter = { q: ui.filter.q || "", soloProblemas: !!ui.filter.soloProblemas };
+    if (ui.options) state.options = { dedupe: !!ui.options.dedupe };
+    injectIcons();
+    highlightTab();
+    wireEvents();
+    el.dedupe.checked = state.options.dedupe;
+    // Primer uso: solo el onboarding; la carga y la semana aparecen al subir archivos.
+    el.uploadPanel.classList.add("hidden");
+    el.topbarLeft.classList.add("hidden");
+  } catch (e) {
+    console.error("Error al iniciar la app:", e);
+    const empty = document.getElementById("empty");
+    if (empty) {
+      empty.classList.remove("hidden");
+      empty.innerHTML = `<div class="onboard-card"><h2>No se pudo cargar la app</h2><p class="onboard-lead">Recarga la página. Si persiste, limpia la caché del navegador.</p><button class="primary" onclick="location.reload()">Recargar</button></div>`;
+    }
+  }
 }
 
 // Marca la pestaña activa en la navegación lateral.
