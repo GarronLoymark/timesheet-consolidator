@@ -16,8 +16,9 @@ export const DEFAULT_PARAMS = { minDia: 8, maxDia: 9, umbral: 8.5, pmNormal: 8, 
  * @param {string} from ISO desde.
  * @param {string} to   ISO hasta.
  */
-export function compute(parsed, cfg, from, to, overrides = {}) {
+export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
   const params = { ...DEFAULT_PARAMS, ...(cfg.params || {}) };
+  const dedupe = !!opts.dedupe; // excluir filas duplicadas de los totales y del Excel
   const keywords = (cfg.keywords || []).filter((k) => k !== "" && k != null);
   const known = new Set((cfg.jobcodes || []).map((j) => String(j[0]).toUpperCase()));
   const aliasMap = {};
@@ -48,7 +49,7 @@ export function compute(parsed, cfg, from, to, overrides = {}) {
   const unknownPeople = new Map();
   const pmOwnRows = new Map();
 
-  const dev = [];
+  let dev = [];
   for (const r of parsed.rows) {
     if (!inRange(r.date)) continue;
 
@@ -119,22 +120,25 @@ export function compute(parsed, cfg, from, to, overrides = {}) {
     dev.push(row);
   }
 
-  // Duplicados exactos dentro de la misma pestaña (se siguen sumando).
+  // Duplicados exactos dentro de la misma pestaña. Por defecto se siguen
+  // sumando (regla del negocio); con dedupe se marcan y se excluyen.
   const seen = new Map();
   for (const r of dev) {
     const k = [r.file, r.tab, r.client, r.task, r.comm, r.date, r.hrs].join("|");
     if (seen.has(k)) {
+      r.dup = true;
       issues.push({
         file: r.file,
         tab: r.tab,
         row: r.row,
-        tipo: `Posible duplicado de la fila ${seen.get(k)} (se está sumando)`,
+        tipo: `Posible duplicado de la fila ${seen.get(k)} (${dedupe ? "excluido" : "se está sumando"})`,
         detalle: `${fmtDay(r.date)} · ${r.task.slice(0, 70)} · ${r.hrs} h`,
       });
     } else {
       seen.set(k, r.row);
     }
   }
+  if (dedupe) dev = dev.filter((r) => !r.dup);
 
   for (const [, name] of unknownPeople) {
     issues.push({

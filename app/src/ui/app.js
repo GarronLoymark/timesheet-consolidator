@@ -38,6 +38,7 @@ const el = {
   week: $("week"),
   from: $("from"),
   to: $("to"),
+  dedupe: $("dedupe"),
   status: $("status"),
   report: $("report"),
   panel: $("panel"),
@@ -53,6 +54,7 @@ const state = {
   R: null,
   tab: "resumen",
   filter: { q: "", soloProblemas: false },
+  options: { dedupe: false }, // opciones del reporte (ignorar duplicados)
   overrides: {}, // ajuste manual Sí/No por fila (key file|tab|row)
   taskShowAll: false,
   ui: {}, // preferencias recordadas (semana/filtros/pestaña)
@@ -81,7 +83,7 @@ function loadUi() {
 function saveUi() {
   localStorage.setItem(
     UI_KEY,
-    JSON.stringify({ tab: state.tab, filter: state.filter, weekFrom: el.from.value, weekTo: el.to.value })
+    JSON.stringify({ tab: state.tab, filter: state.filter, options: state.options, weekFrom: el.from.value, weekTo: el.to.value })
   );
 }
 
@@ -94,9 +96,11 @@ async function init() {
   state.overrides = loadOverrides();
   if (ui.tab) state.tab = ui.tab;
   if (ui.filter) state.filter = { q: ui.filter.q || "", soloProblemas: !!ui.filter.soloProblemas };
+  if (ui.options) state.options = { dedupe: !!ui.options.dedupe };
   injectIcons();
   highlightTab();
   wireEvents();
+  el.dedupe.checked = state.options.dedupe;
   // Primer uso: solo el onboarding; la carga y la semana aparecen al subir archivos.
   el.uploadPanel.classList.add("hidden");
   el.topbarLeft.classList.add("hidden");
@@ -173,6 +177,11 @@ function wireEvents() {
     saveUi();
   });
   el.to.addEventListener("change", () => {
+    recompute();
+    saveUi();
+  });
+  el.dedupe.addEventListener("change", () => {
+    state.options.dedupe = el.dedupe.checked;
     recompute();
     saveUi();
   });
@@ -298,7 +307,7 @@ function recompute() {
   if (!from || !to || from > to) return;
   const parsed = mergedParsed();
   if (!parsed.rows.length) return;
-  state.R = compute(parsed, state.cfg, from, to, state.overrides);
+  state.R = compute(parsed, state.cfg, from, to, state.overrides, state.options);
   el.download.disabled = false;
   renderPanel();
 }
@@ -314,7 +323,7 @@ function selectTab(tab) {
 function buildWeekSummaries() {
   const parsed = mergedParsed();
   return state.weeks.map((w) => {
-    const R = compute(parsed, state.cfg, w.from, w.to, state.overrides);
+    const R = compute(parsed, state.cfg, w.from, w.to, state.overrides, state.options);
     const fuera = R.validation.filter((v) => v.tipo === "Fijo" && v.estado !== "OK").length;
     const horas = R.dev.reduce((s, d) => s + d.hrs, 0);
     const horasPM = R.pm.reduce((s, p) => s + p.horasPM, 0);
@@ -551,7 +560,7 @@ function recomputeKeepTab() {
   if (!from || !to || from > to) return;
   const parsed = mergedParsed();
   if (!parsed.rows.length) return;
-  state.R = compute(parsed, state.cfg, from, to, state.overrides);
+  state.R = compute(parsed, state.cfg, from, to, state.overrides, state.options);
 }
 
 function flashSaved() {

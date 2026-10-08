@@ -192,6 +192,15 @@ async function main() {
     it("excluye como subtotal las filas 116 y 117", () => expect(subRows).toBe(2));
   });
 
+  describe("Ignorar duplicados (dedupe)", () => {
+    const Rd = compute(parsed, cfg, "2026-10-01", "2026-10-04", {}, { dedupe: true });
+    it("excluye duplicados: Standard Dev 3 queda con 8 h el 01/10", () => {
+      const v = Rd.validation.find((x) => x.dev === "Standard Dev 3");
+      expect(v.perDay["2026-10-01"]).toBeCloseTo(8, 2);
+    });
+    it("con dedupe hay 7 filas DEV menos (los 7 duplicados)", () => expect(Rd.dev.length).toBe(R.dev.length - 7));
+  });
+
   render(out);
 }
 
