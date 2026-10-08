@@ -25,9 +25,9 @@ Semana por defecto: `5-9 OCT`.
 | Filas DEV incluidas | 405 |
 | Filas DEV cuya regla automática es "Sí" | 375 |
 | Personas en Validación | 22 (21 con horas; Andres Rockbrand no tiene) |
-| Incidencias | 31 |
+| Incidencias | 24 |
 | Horas PM totales | 66 (8 combinaciones de equipo y día; ver Caso 4) |
-| Duplicados detectados | A.Cordero 225, Allan 315 y 320, Carlos C 12, Cristian V. 113 a 115, Cesar Jesus (bloque repetido con horas distintas) |
+| Duplicados detectados | A.Cordero 225, Allan 315 y 320, Carlos C 12, Cristian V. 113 a 115 |
 
 Incidencias esperadas por tipo:
 
@@ -37,7 +37,7 @@ Incidencias esperadas por tipo:
 | Job Code no existe | 5 (BRF, OSCM, RKD INT, NFNMS, GBD) |
 | Fila sin horas | 4 (Allan, filas 316 a 319) |
 | Fila sin Client ni Task Name con horas | 2 (Cristian V., filas 116 y 117) |
-| Posible duplicado | 14 |
+| Posible duplicado | 7 |
 | Filas propias del PM excluidas | 1 (Minor Cascante, 116 filas) |
 | Pestaña sin registros | 1 (Andres Rockbrand) |
 

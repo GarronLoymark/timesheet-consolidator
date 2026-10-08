@@ -120,12 +120,11 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
     dev.push(row);
   }
 
-  // Duplicado = misma persona, cliente, tarea, comentario y día. Las horas NO
-  // entran en la clave: un bloque pegado de nuevo con horas editadas sigue
-  // siendo el mismo registro. Por defecto se siguen sumando; con dedupe se excluyen.
+  // Duplicado exacto: misma persona, cliente, tarea, comentario, día y horas.
+  // Por defecto se siguen sumando (regla del negocio); con dedupe se excluyen.
   const seen = new Map();
   for (const r of dev) {
-    const k = [r.file, r.tab, r.res, r.client, r.task, r.comm, r.date].join("|");
+    const k = [r.file, r.tab, r.res, r.client, r.task, r.comm, r.date, r.hrs].join("|");
     if (seen.has(k)) {
       r.dup = true;
       issues.push({
