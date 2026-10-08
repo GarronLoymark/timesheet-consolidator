@@ -7,21 +7,26 @@ el procesamiento ocurre en el navegador (privacidad RNF-01).
 ## Cómo ejecutar
 
 No necesita build ni Node. Solo un servidor estático (porque usa módulos ES).
-Usa el servidor de desarrollo incluido (multihilo y **sin caché**, para que al
-refrescar no se mezclen módulos viejos y nuevos):
+
+**Con PHP** (recomendado; el backend se construye en PHP):
+
+```bash
+php -S localhost:8777 app/tools/router.php
+```
+
+El router sirve la app **sin caché** (para que al refrescar no se mezclen
+módulos viejos y nuevos), responde el favicon y ya ejecuta endpoints `.php`
+cuando se agreguen. Luego abre <http://localhost:8777/index.html>.
+
+**Alternativa con Python** (sin PHP):
 
 ```bash
 cd app
 python3 tools/serve.py 8777
 ```
 
-Luego abre <http://localhost:8777/index.html>.
-
-> `python3 -m http.server` también funciona, pero cachea; si al refrescar la app
-> se rompe a veces, usa `tools/serve.py`.
->
-> Para publicarla, copia la carpeta `app/` a cualquier hosting estático
-> (Nginx, GitHub Pages, un recurso compartido interno, etc.).
+> Para publicarla, copia la carpeta `app/` a cualquier hosting estático o con
+> PHP (Nginx + PHP-FPM, Apache, un recurso compartido interno, etc.).
 
 ## Uso
 
