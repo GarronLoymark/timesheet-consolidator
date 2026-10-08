@@ -12,3 +12,10 @@ app/test/_out.xlsx
 # Editor / temporales
 *.log
 .vscode/
+
+# Artefactos de CI / Node (solo herramientas, no runtime de la app)
+node_modules/
+package.json
+package-lock.json
+out.xlsx
+recalc/
