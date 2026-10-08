@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar Playwright (solo para CI)
+        run: |
+          npm init -y
+          npm i -D playwright@1.47
+          npx playwright install --with-deps chromium
+
+      - name: Servir la app, correr pruebas (50) y generar Excel
+        run: |
+          cd app && python3 -m http.server 8777 & 
+          cd "$GITHUB_WORKSPACE"
+          for i in $(seq 1 20); do curl -sf http://localhost:8777/index.html >/dev/null && break; sleep 0.5; done
+          node app/test/ci.mjs
+
+      - name: Instalar LibreOffice
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libreoffice-calc
+
+      - name: Caso 8 · recalcular el Excel y verificar que no haya errores
+        run: |
+          mkdir -p recalc
+          soffice --headless --calc --convert-to xlsx --outdir recalc out.xlsx
+          pip install --quiet openpyxl
+          python3 app/tools/check_excel.py recalc/out.xlsx
