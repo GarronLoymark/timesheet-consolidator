@@ -115,7 +115,12 @@ export function validationTable(R, filtered) {
           : `<span class="chip bad">${icon.alert(14)} ${esc(v.estado)}</span>`;
       const detalle =
         v.overDays && v.overDays.length
-          ? `<div class="sub">${v.overDays.map((o) => `${esc(fmtDay(o.date))}: ${f2(v.perDay[o.date])} h`).join(" · ")}</div>`
+          ? `<div class="daypills">${v.overDays
+              .map(
+                (o) =>
+                  `<span class="daypill" title="${esc(fmtDay(o.date))}: ${f2(v.perDay[o.date])} h (${f2(o.over)} h de más)">${esc(fmtDay(o.date))}</span>`
+              )
+              .join("")}</div>`
           : "";
       body += `<tr><td>${esc(v.dev)}</td><td>${esc(v.tipo)}</td>${cells}<td class="n">${f2(v.total)}</td><td>${chip}${detalle}</td></tr>`;
     }
