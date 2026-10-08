@@ -4,7 +4,7 @@
 export { isWeekend, fmtDay } from "./dates.js";
 export { parseTimesheetWorkbook, parseJobCodes, isClientWorkbook } from "./parse.js";
 export { weeksFromRows, weekLabel } from "./weeks.js";
-export { normClient } from "./jobcodes.js";
+export { normClient, closestJobCode } from "./jobcodes.js";
 export { autoCount } from "./rules.js";
 export { compute } from "./compute.js";
 export { buildXlsx } from "./excel.js";

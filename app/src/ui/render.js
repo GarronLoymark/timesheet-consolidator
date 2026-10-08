@@ -307,10 +307,14 @@ export function renderIssues(R) {
       const action = m
         ? ` <button class="miniadd" data-add-person="${esc(m[1])}">+ Agregar al roster</button>`
         : "";
+      const fix = i.sugerencia
+        ? ` <span class="suggest">¿Quisiste decir <b>${esc(i.sugerencia)}</b>?</span>` +
+          ` <button class="miniadd" data-fix-jc="${esc(i.jobCode)}|${esc(i.sugerencia)}">Corregir</button>`
+        : "";
       const spec = specific(i.tipo);
       const detail =
         (spec ? `<b>${esc(spec)}</b>` : "") + (spec && i.detalle ? " · " : "") + (i.detalle ? esc(i.detalle) : "");
-      rows += `<tr><td>${i.tab ? esc(i.tab) : "—"}</td><td class="n">${esc(i.row)}</td><td>${detail || "—"}${action}</td></tr>`;
+      rows += `<tr><td>${i.tab ? esc(i.tab) : "—"}</td><td class="n">${esc(i.row)}</td><td>${detail || "—"}${action}${fix}</td></tr>`;
     }
   }
   return (

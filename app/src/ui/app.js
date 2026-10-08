@@ -554,6 +554,19 @@ function onConfigClick(e) {
     if (state.R) setPanel(renderTasks(state.R, state.taskFilter));
     return;
   }
+  // Corregir typo de Job Code: crea un alias desconocido -> sugerido.
+  const fixJc = t.closest && t.closest("[data-fix-jc]");
+  if (fixJc) {
+    const [de, a] = fixJc.getAttribute("data-fix-jc").split("|");
+    state.cfg.aliases = state.cfg.aliases || [];
+    if (!state.cfg.aliases.some((x) => (x.de || "").toUpperCase() === (de || "").toUpperCase())) {
+      state.cfg.aliases.push({ de, a });
+      saveConfig(state.cfg);
+    }
+    recompute();
+    toast(`Alias agregado: "${de}" → "${a}". Corregido en todo el reporte.`);
+    return;
+  }
   const add = t.closest && t.closest("[data-add-person]");
   if (add) {
     const name = add.getAttribute("data-add-person");

@@ -235,6 +235,7 @@ td.wk { background: var(--wk) !important; color: var(--muted); }
 .banner.ok .ic { color: var(--ok); }
 .banner button { margin-left: auto; font-size: 13px; padding: 4px 10px; }
 .miniadd { font-size: 12.5px; padding: 3px 9px; margin-left: 8px; }
+.suggest { font-size: 12.5px; color: var(--muted); margin-left: 8px; }
 .note { font-size: 13px; color: var(--muted); margin: 0 0 12px; max-width: 82ch; }
 .empty { color: var(--muted); padding: 32px 8px; text-align: center; }
 

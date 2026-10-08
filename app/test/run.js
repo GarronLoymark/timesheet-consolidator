@@ -6,6 +6,7 @@ import {
   parseTimesheetWorkbook,
   compute,
   normClient,
+  closestJobCode,
   autoCount,
   weekLabel,
   buildConsolidadoRows,
@@ -53,6 +54,14 @@ async function main() {
       expect(normClient("", "BVRPA: Halloween party", aliasMap, known)).toBe("BVRPA"));
     it("'NTFB ' (con espacio) -> NTFB", () => expect(normClient("NTFB ", "", aliasMap, known)).toBe("NTFB"));
     it("RKD MTG INT -> RKD MTGINT", () => expect(normClient("RKD MTG INT", "", aliasMap, known)).toBe("RKD MTGINT"));
+  });
+
+  describe("Typos de Job Code (sugerencia)", () => {
+    it("BRF -> BFF (1 cambio)", () => expect(closestJobCode("BRF", known)).toBe("BFF"));
+    it("NFNMS -> MFNMS (1 cambio)", () => expect(closestJobCode("NFNMS", known)).toBe("MFNMS"));
+    it("código ya conocido no sugiere nada", () => expect(closestJobCode("BFF", known)).toBe(""));
+    it("demasiado corto no sugiere", () => expect(closestJobCode("AB", known)).toBe(""));
+    it("sin parecido no sugiere", () => expect(closestJobCode("ZZZZZZ", known)).toBe(""));
   });
 
   describe("Caso 6 · ¿Cuenta para el PM?", () => {

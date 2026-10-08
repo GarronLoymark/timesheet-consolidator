@@ -5,7 +5,7 @@
 import { key, clean } from "./text.js";
 import { daysBetween, isWeekend, fmtDay } from "./dates.js";
 import { weekLabel } from "./weeks.js";
-import { normClient } from "./jobcodes.js";
+import { normClient, closestJobCode } from "./jobcodes.js";
 import { autoCount } from "./rules.js";
 
 const DEFAULT_PARAMS = { minDia: 8, maxDia: 9, umbral: 8.5, pmNormal: 8, pmAlta: 9 };
@@ -106,6 +106,8 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
         date: r.date,
         tipo: `Job Code "${client}" no existe en JobCodes`,
         detalle: r.task.slice(0, 90),
+        jobCode: client,
+        sugerencia: closestJobCode(client, known),
       });
     }
     if (isWeekend(r.date) && tipo !== "On demand") {
