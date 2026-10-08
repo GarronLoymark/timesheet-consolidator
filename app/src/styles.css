@@ -310,8 +310,6 @@ td.wk { background: var(--wk) !important; color: var(--muted); }
 .donutwrap { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
 .donut-num { font-size: 22px; font-weight: 700; fill: var(--ink); }
 .donut-lbl { font-size: 10px; fill: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-.linechart .axis { font-size: 9px; fill: var(--muted); }
-.linechart .axis-val { font-size: 9px; fill: var(--ink); font-weight: 700; }
 .legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; min-width: 150px; }
 .legend li { display: flex; align-items: center; gap: 9px; }
 .legend b { margin-left: auto; font-variant-numeric: tabular-nums; }

@@ -118,6 +118,7 @@ export function parseTimesheetWorkbook(XLSX, workbook, fileName) {
       if (!d || clean(res) === "") {
         issues.push({
           ...where,
+          res: clean(res),
           date: d,
           tipo: "Fila incompleta (sin fecha o sin Resource): no se incluye",
           detalle: clean(task).slice(0, 90),

@@ -3,7 +3,7 @@
 
 import { fmtDay, isWeekend } from "../core/index.js";
 import { icon } from "./icons.js";
-import { barList, donut, chartCard, lineChart } from "./charts.js";
+import { barList, donut, chartCard } from "./charts.js";
 import { COUNTRIES } from "../data/holidays.js";
 export function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -188,36 +188,6 @@ export function renderOverview(R) {
   );
 }
 
-/** Página Tendencia: compara métricas entre las semanas detectadas. */
-export function renderTrend(summaries) {
-  const header = pageHeader(icon.trending(18), "Tendencia", "Comparación entre las semanas detectadas en los datos.");
-  if (!summaries || summaries.length <= 1) {
-    return `${header}<div class="empty">Carga datos con más de una semana para ver la comparación.</div>`;
-  }
-
-  const head =
-    `<thead><tr><th>Semana</th><th class="n">Personas</th><th class="n">Fijos fuera</th>` +
-    `<th class="n">Horas registradas</th><th class="n">Horas PM</th><th class="n">Incidencias</th></tr></thead>`;
-  const body = summaries
-    .map(
-      (s) =>
-        `<tr><td>${esc(s.label)}</td><td class="n">${s.personas}</td>` +
-        `<td class="n ${s.fuera ? "bad" : ""}">${s.fuera}</td><td class="n">${f2(s.horas)}</td>` +
-        `<td class="n">${f2(s.horasPM)}</td><td class="n ${s.incidencias ? "bad" : ""}">${s.incidencias}</td></tr>`
-    )
-    .join("");
-
-  const pts = (key, dec = 0) => summaries.map((s) => ({ label: s.label, value: s[key] }));
-  const charts =
-    `<div class="charts">` +
-    chartCard("Horas PM por semana", lineChart(pts("horasPM"), { unit: " h", decimals: 2, color: "#2e6f9e" }), icon.userClock(16)) +
-    chartCard("Fijos fuera de rango por semana", lineChart(pts("fuera"), { color: "#a8381f" }), icon.alert(16)) +
-    chartCard("Incidencias por semana", lineChart(pts("incidencias"), { color: "#d98324" }), icon.alert(16)) +
-    `</div>`;
-
-  return `${header}${charts}<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
-}
-
 export function renderValidation(R, filter = {}) {
   if (R.validation.length === 0) return `<div class="empty">Sin personas en el rango.</div>`;
   const names = R.holidayNames || {};
@@ -340,6 +310,49 @@ export function renderIssues(R) {
     `${header}<div class="scroll"><table class="sortable">` +
     `<thead><tr><th>Pestaña</th><th class="n">Fila</th><th>Detalle</th></tr></thead>` +
     `<tbody>${rows}</tbody></table></div>`
+  );
+}
+
+/** Histórico de incidencias por DEV (todas las semanas cargadas), con filtros. */
+export function renderIncidentHistory(history, filter = {}) {
+  const header = pageHeader(
+    icon.alert(18),
+    "Histórico de incidencias por DEV",
+    "Errores al ingresar datos en los timesheets, por desarrollador."
+  );
+  if (!history.length) return `${header}<div class="empty">Sin incidencias de datos en las semanas cargadas.</div>`;
+
+  const devs = [...new Set(history.map((h) => h.dev).filter(Boolean))].sort();
+  const semanas = [...new Set(history.map((h) => h.semana))];
+  const f = { dev: filter.dev || "", semana: filter.semana || "", dia: filter.dia || "" };
+  const rows = history.filter(
+    (h) => (!f.dev || h.dev === f.dev) && (!f.semana || h.semana === f.semana) && (!f.dia || h.date === f.dia)
+  );
+
+  const opt = (val, sel) => `<option value="${esc(val)}" ${val === sel ? "selected" : ""}>${esc(val)}</option>`;
+  const toolbar =
+    `<div class="toolbar">` +
+    `<label class="f">DEV<select id="histDev"><option value="">Todos</option>${devs.map((d) => opt(d, f.dev)).join("")}</select></label>` +
+    `<label class="f">Semana<select id="histSemana"><option value="">Todas</option>${semanas.map((s) => opt(s, f.semana)).join("")}</select></label>` +
+    `<label class="f">Día<input id="histDia" type="date" value="${esc(f.dia)}"></label>` +
+    (f.dev || f.semana || f.dia ? `<button class="miniadd" id="histClear">Limpiar filtros</button>` : "") +
+    `<span class="count">${rows.length} de ${history.length}</span>` +
+    `</div>`;
+
+  const isErr = (tipo) => /no existe|incompleta/i.test(tipo);
+  let body = "";
+  for (const h of rows) {
+    const sev = isErr(h.tipo) ? "err" : "warn";
+    body +=
+      `<tr><td><span class="sev ${sev}"></span>${esc(h.dev || "—")}</td><td>${esc(h.semana)}</td>` +
+      `<td>${h.date ? esc(fmtDay(h.date)) : "—"}</td><td>${esc(h.tipo)}</td><td>${h.detalle ? esc(h.detalle) : "—"}</td></tr>`;
+  }
+  if (!rows.length) body = `<tr><td colspan="5"><div class="empty">Sin resultados para el filtro.</div></td></tr>`;
+
+  return (
+    `${header}${toolbar}<div class="scroll"><table class="sortable">` +
+    `<thead><tr><th>DEV</th><th>Semana</th><th>Día</th><th>Tipo</th><th>Detalle</th></tr></thead>` +
+    `<tbody>${body}</tbody></table></div>`
   );
 }
 

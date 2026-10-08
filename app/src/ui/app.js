@@ -13,7 +13,7 @@ import { jobcodesForExcel } from "../config.js";
 import { getConfig, saveConfig, resetConfig } from "./config-store.js";
 import {
   renderOverview,
-  renderTrend,
+  renderIncidentHistory,
   renderValidation,
   filterValidation,
   validationTable,
@@ -55,6 +55,7 @@ const state = {
   R: null,
   tab: "resumen",
   filter: { q: "", soloProblemas: false },
+  histFilter: { dev: "", semana: "", dia: "" }, // filtros del histórico de incidencias
   options: { dedupe: false }, // opciones del reporte (ignorar duplicados)
   overrides: {}, // ajuste manual Sí/No por fila (key file|tab|row)
   taskShowAll: false,
@@ -98,6 +99,7 @@ async function init() {
     state.overrides = loadOverrides();
     if (ui.tab) state.tab = ui.tab;
     if (state.tab === "pm") state.tab = "validacion"; // Horas PM se fusionó en Validación
+    if (state.tab === "tendencia") state.tab = "historico"; // Tendencia es ahora el histórico de incidencias
     if (ui.filter) state.filter = { q: ui.filter.q || "", soloProblemas: !!ui.filter.soloProblemas };
     if (ui.options) state.options = { dedupe: !!ui.options.dedupe };
     highlightTab();
@@ -356,16 +358,19 @@ function selectTab(tab) {
   renderPanel();
 }
 
-// Resumen de métricas por cada semana detectada, para la vista Tendencia.
-function buildWeekSummaries() {
+// Histórico de incidencias por DEV: recorre todas las semanas cargadas y junta
+// los errores por fila (de ingreso de datos) con su semana, día y recurso.
+function buildIncidentHistory() {
   const parsed = mergedParsed();
-  return state.weeks.map((w) => {
+  const out = [];
+  for (const w of state.weeks) {
     const R = compute(parsed, state.cfg, w.from, w.to, state.overrides, state.options);
-    const fuera = R.validation.filter((v) => v.tipo === "Fijo" && v.estado !== "OK").length;
-    const horas = R.dev.reduce((s, d) => s + d.hrs, 0);
-    const horasPM = R.pm.reduce((s, p) => s + p.horasPM, 0);
-    return { label: w.label, from: w.from, to: w.to, personas: R.validation.length, fuera, horas, horasPM, incidencias: R.issues.length };
-  });
+    for (const i of R.issues) {
+      if (!i.row) continue; // solo incidencias por fila (errores al ingresar datos)
+      out.push({ dev: i.res || i.tab || "", semana: w.label, from: w.from, to: w.to, date: i.date || "", tipo: i.tipo, detalle: i.detalle || "" });
+    }
+  }
+  return out;
 }
 
 function renderPanel() {
@@ -378,7 +383,7 @@ function renderPanel() {
     return;
   }
   if (state.tab === "resumen") setPanel(renderOverview(state.R));
-  else if (state.tab === "tendencia") setPanel(renderTrend(buildWeekSummaries()));
+  else if (state.tab === "historico") setPanel(renderIncidentHistory(buildIncidentHistory(), state.histFilter));
   else if (state.tab === "validacion") setPanel(renderValidation(state.R, state.filter));
   else if (state.tab === "tareas") setPanel(renderTasks(state.R, { showAll: state.taskShowAll }));
   else if (state.tab === "incidencias") setPanel(renderIssues(state.R));
@@ -502,6 +507,15 @@ function onConfigInput(e) {
     return;
   }
 
+  // Filtros del histórico de incidencias por DEV.
+  if (t.id === "histDev" || t.id === "histSemana" || t.id === "histDia") {
+    if (t.id === "histDev") state.histFilter.dev = t.value;
+    else if (t.id === "histSemana") state.histFilter.semana = t.value;
+    else state.histFilter.dia = t.value;
+    setPanel(renderIncidentHistory(buildIncidentHistory(), state.histFilter));
+    return;
+  }
+
   if (!t.matches("[data-param], [data-r], [data-a], [data-fer], #cfgKeywords")) return;
 
   if (t.dataset.param) {
@@ -529,6 +543,11 @@ function onConfigInput(e) {
 
 function onConfigClick(e) {
   const t = e.target;
+  if (t.id === "histClear") {
+    state.histFilter = { dev: "", semana: "", dia: "" };
+    setPanel(renderIncidentHistory(buildIncidentHistory(), state.histFilter));
+    return;
+  }
   const add = t.closest && t.closest("[data-add-person]");
   if (add) {
     const name = add.getAttribute("data-add-person");

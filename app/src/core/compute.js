@@ -58,6 +58,8 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
         file: r.file,
         tab: r.tab,
         row: r.row,
+        res: r.res,
+        date: r.date,
         tipo: "Fila sin Client ni Task Name con horas: no se incluye (¿subtotal u horas sin descripción?)",
         detalle: `${fmtDay(r.date)} · ${r.hrs} h`,
       });
@@ -89,6 +91,8 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
         file: r.file,
         tab: r.tab,
         row: r.row,
+        res: row.res,
+        date: r.date,
         tipo: "Fila sin horas (se toma como 0)",
         detalle: `${fmtDay(r.date)} · ${r.task.slice(0, 80)}`,
       });
@@ -98,6 +102,8 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
         file: r.file,
         tab: r.tab,
         row: r.row,
+        res: row.res,
+        date: r.date,
         tipo: `Job Code "${client}" no existe en JobCodes`,
         detalle: r.task.slice(0, 90),
       });
@@ -107,6 +113,8 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
         file: r.file,
         tab: r.tab,
         row: r.row,
+        res: row.res,
+        date: r.date,
         tipo: "Recurso fijo con horas en fin de semana",
         detalle: `${fmtDay(r.date)} · ${r.task.slice(0, 80)}`,
       });
@@ -131,6 +139,8 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
         file: r.file,
         tab: r.tab,
         row: r.row,
+        res: r.res,
+        date: r.date,
         tipo: `Posible duplicado de la fila ${seen.get(k)} (${dedupe ? "excluido" : "se está sumando"})`,
         detalle: `${fmtDay(r.date)} · ${r.task.slice(0, 70)} · ${r.hrs} h`,
       });
@@ -145,6 +155,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
       file: "",
       tab: "",
       row: "",
+      res: name,
       tipo: `"${name}" no está en Equipos`,
       detalle: "Agrégalo en Configuración para asignarle equipo y tipo",
     });
@@ -154,6 +165,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
       file: "",
       tab: "",
       row: "",
+      res: name,
       tipo: `${n} filas propias de ${name} (PM) no se incluyen`,
       detalle: "Las horas del PM se calculan con la regla del equipo",
     });
