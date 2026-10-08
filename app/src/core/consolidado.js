@@ -34,13 +34,3 @@ export function buildConsolidadoRows(R, jobcodes) {
 
   return rows;
 }
-
-/** Texto TSV listo para pegar en Excel (sin encabezados), horas con punto decimal. */
-export function consolidadoToTSV(rows) {
-  return rows.map((r) => r.map(cell).join("\t")).join("\n");
-}
-
-function cell(v) {
-  if (typeof v === "number") return String(v);
-  return String(v == null ? "" : v).replace(/\t|\n|\r/g, " ");
-}

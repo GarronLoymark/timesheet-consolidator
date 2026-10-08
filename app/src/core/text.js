@@ -23,12 +23,3 @@ export function key(s) {
 export function clean(s) {
   return String(s == null ? "" : s).replace(/\s+/g, " ").trim();
 }
-
-/**
- * Convierte a texto tolerando null/undefined.
- * @param {unknown} v
- * @returns {string}
- */
-export function txt(v) {
-  return v == null ? "" : String(v);
-}

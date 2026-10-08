@@ -6,7 +6,7 @@
  * @param {{typ:string, task:string, comm:string}} r
  * @param {string[]} keywords
  */
-export function meetingCounts(r, keywords) {
+function meetingCounts(r, keywords) {
   const text = " " + (r.typ + " " + r.task + " " + r.comm).toLowerCase() + " ";
   return keywords.some((k) => k !== "" && text.includes(String(k).toLowerCase()));
 }

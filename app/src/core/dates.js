@@ -27,7 +27,7 @@ export const fromIso = (s) => new Date(s + "T00:00:00Z");
 export const serialToIso = (n) => iso(new Date(Math.round((n - 25569) * DAY)));
 
 /** Día de la semana: 0 domingo .. 6 sábado. @param {string} s */
-export const dow = (s) => fromIso(s).getUTCDay();
+const dow = (s) => fromIso(s).getUTCDay();
 
 /** ¿Es sábado o domingo? @param {string} s */
 export const isWeekend = (s) => dow(s) === 0 || dow(s) === 6;

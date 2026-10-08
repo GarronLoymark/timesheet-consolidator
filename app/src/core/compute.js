@@ -8,7 +8,7 @@ import { weekLabel } from "./weeks.js";
 import { normClient } from "./jobcodes.js";
 import { autoCount } from "./rules.js";
 
-export const DEFAULT_PARAMS = { minDia: 8, maxDia: 9, umbral: 8.5, pmNormal: 8, pmAlta: 9 };
+const DEFAULT_PARAMS = { minDia: 8, maxDia: 9, umbral: 8.5, pmNormal: 8, pmAlta: 9 };
 
 /**
  * @param {{rows:any[], issues:any[], tabs:any[]}} parsed  Resultado de parseTimesheetWorkbook (concatenado).
