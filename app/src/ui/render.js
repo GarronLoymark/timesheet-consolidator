@@ -196,14 +196,14 @@ export function renderOverview(R) {
     renderBanner(R) +
     `<div class="stats">${renderStats(R)}</div>` +
     `<div class="charts">` +
-    chartCard("Hs PTO por equipo", teamBody(ptoByTeam), icon.clock(16)) +
-    chartCard("Hs IDLE por equipo", teamBody(idleByTeam), icon.clock(16)) +
-    chartCard("Total Holidays", bignum(holidays, "días"), icon.calendar(16)) +
-    `</div>` +
-    `<div class="charts">` +
     chartCard("Estado de los recursos", estado, icon.users(16)) +
     chartCard("Horas PM por equipo", pmBars, icon.userClock(16)) +
     chartCard("Horas registradas por equipo", hBars, icon.briefcase(16)) +
+    `</div>` +
+    `<div class="charts">` +
+    chartCard("Hs PTO por equipo", teamBody(ptoByTeam), icon.clock(16)) +
+    chartCard("Hs IDLE por equipo", teamBody(idleByTeam), icon.clock(16)) +
+    chartCard("Total Holidays", bignum(holidays, "días"), icon.calendar(16)) +
     `</div>`
   );
 }
