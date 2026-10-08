@@ -17,196 +17,196 @@
   ],
   "roster": [
     {
-      "dev": "Esteban Trejos",
+      "dev": "Web Dev 1",
       "equipo": "Web",
-      "pm": "Maribel Víquez",
+      "pm": "Web PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Juan Felipe",
+      "dev": "Web Dev 2",
       "equipo": "Web",
-      "pm": "Maribel Víquez",
+      "pm": "Web PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Tony Aguilar",
+      "dev": "Web Dev 3",
       "equipo": "Web",
-      "pm": "Maribel Víquez",
+      "pm": "Web PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Yatziry Pacheco",
+      "dev": "Standard Dev 1",
       "equipo": "Standard",
-      "pm": "Maria Jose Navarrete",
+      "pm": "Standard PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Jesús López",
+      "dev": "Standard Dev 2",
       "equipo": "Standard",
-      "pm": "Maria Jose Navarrete",
+      "pm": "Standard PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Cristian Villamizar",
+      "dev": "Standard Dev 3",
       "equipo": "Standard",
-      "pm": "Maria Jose Navarrete",
+      "pm": "Standard PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Jonathan Villamizar",
+      "dev": "Standard Dev 4",
       "equipo": "Standard",
-      "pm": "Maria Jose Navarrete",
+      "pm": "Standard PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Carlos Cancines",
+      "dev": "QA Dev 1",
       "equipo": "QA",
-      "pm": "Minor Cascante",
+      "pm": "QA PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Agustín Cattáneo",
+      "dev": "QA Dev 2",
       "equipo": "QA",
-      "pm": "Minor Cascante",
+      "pm": "QA PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Silvio Jaime",
+      "dev": "QA Dev 3",
       "equipo": "QA",
-      "pm": "Minor Cascante",
+      "pm": "QA PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Ester Soto",
+      "dev": "QA Dev 4",
       "equipo": "QA",
-      "pm": "Minor Cascante",
+      "pm": "QA PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Maria Paula",
+      "dev": "QA Dev 5",
       "equipo": "QA",
-      "pm": "Minor Cascante",
+      "pm": "QA PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Alfonso Rodriguez",
+      "dev": "QA Dev 6",
       "equipo": "QA",
-      "pm": "Minor Cascante",
+      "pm": "QA PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "De Francisco Nicolas",
+      "dev": "QA Dev 7",
       "equipo": "QA",
-      "pm": "Minor Cascante",
+      "pm": "QA PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Minor Cascante",
+      "dev": "QA PM",
       "equipo": "QA",
-      "pm": "Minor Cascante",
+      "pm": "QA PM",
       "tipo": "PM",
       "cuentaPM": "No"
     },
     {
-      "dev": "Andres Rockbrand",
+      "dev": "QA OnDem 1",
       "equipo": "QA",
-      "pm": "Minor Cascante",
+      "pm": "QA PM",
       "tipo": "On demand",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Warner Garron",
+      "dev": "Email Dev 1",
       "equipo": "Email",
-      "pm": "Guillermo Quesada",
+      "pm": "Email PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Kevin Blanco Picado",
+      "dev": "Email Dev 2",
       "equipo": "Email",
-      "pm": "Guillermo Quesada",
+      "pm": "Email PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Cesar Jesus",
+      "dev": "Email Dev 3",
       "equipo": "Email",
-      "pm": "Guillermo Quesada",
+      "pm": "Email PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Andres Cordero",
+      "dev": "Email Dev 4",
       "equipo": "Email",
-      "pm": "Guillermo Quesada",
+      "pm": "Email PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Allan Gamboa",
+      "dev": "Email Dev 5",
       "equipo": "Email",
-      "pm": "Guillermo Quesada",
+      "pm": "Email PM",
       "tipo": "Fijo",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Jorge Cerdas",
+      "dev": "Email OnDem 1",
       "equipo": "Email",
-      "pm": "Guillermo Quesada",
+      "pm": "Email PM",
       "tipo": "On demand",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Joselyn Jimenez",
+      "dev": "Email OnDem 2",
       "equipo": "Email",
-      "pm": "Guillermo Quesada",
+      "pm": "Email PM",
       "tipo": "On demand",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Juanita Gómez Moreno",
+      "dev": "Ops 1",
       "equipo": "Ops",
       "pm": "",
       "tipo": "No incluir",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Daniela Sarmiento",
+      "dev": "Ops 2",
       "equipo": "Ops",
       "pm": "",
       "tipo": "No incluir",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Valentina Bulla",
+      "dev": "Ops 3",
       "equipo": "Ops",
       "pm": "",
       "tipo": "No incluir",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Liam",
+      "dev": "Ops 4",
       "equipo": "Ops",
       "pm": "",
       "tipo": "No incluir",
       "cuentaPM": "Sí"
     },
     {
-      "dev": "Catalina Santilli",
+      "dev": "Ops 5",
       "equipo": "Ops",
       "pm": "",
       "tipo": "No incluir",

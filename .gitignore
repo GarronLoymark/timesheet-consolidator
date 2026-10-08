@@ -1,7 +1,8 @@
 # Datos reales (privacidad): nunca publicar timesheets con nombres reales.
-# Anonimizar antes de versionar como fixtures (ver docs/05-casos-de-prueba.md).
+# Los fixtures *.anon.xlsx sí se versionan (anonimizados con app/tools/anonymize.py).
 /*.xlsx
 app/test/fixtures/*.xlsx
+!app/test/fixtures/*.anon.xlsx
 app/test/_out.xlsx
 
 # Archivos del sistema

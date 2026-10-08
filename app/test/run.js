@@ -75,7 +75,7 @@ async function main() {
 
   // ---------- Fixtures reales ----------
   out.textContent = "Leyendo team.xlsx…";
-  const wb = await readWorkbook("./fixtures/team.xlsx");
+  const wb = await readWorkbook("./fixtures/team.anon.xlsx");
   const parsed = parseTimesheetWorkbook(XLSX, wb, "team.xlsx");
   const R = compute(parsed, cfg, "2026-10-01", "2026-10-04");
 
@@ -89,38 +89,38 @@ async function main() {
   });
 
   describe("Caso 3 · Validación (semana 1)", () => {
-    it("Cesar Jesus total 18.25 · Excede 0.25", () => {
-      const v = val(R, "Cesar Jesus");
+    it("Email Dev 3 total 18.25 · Excede 0.25", () => {
+      const v = val(R, "Email Dev 3");
       expect(v.total).toBeCloseTo(18.25, 2);
       expect(v.estado).toBe("Excede 0.25 h");
     });
-    it("Juan Felipe total 14.5 · Faltan 1.50", () => {
-      const v = val(R, "Juan Felipe");
+    it("Web Dev 2 total 14.5 · Faltan 1.50", () => {
+      const v = val(R, "Web Dev 2");
       expect(v.total).toBeCloseTo(14.5, 2);
       expect(v.estado).toBe("Faltan 1.50 h");
     });
-    it("Cristian Villamizar total 18 · OK", () => {
-      const v = val(R, "Cristian Villamizar");
+    it("Standard Dev 3 total 18 · OK", () => {
+      const v = val(R, "Standard Dev 3");
       expect(v.total).toBeCloseTo(18, 2);
       expect(v.estado).toBe("OK");
     });
-    it("Alfonso Rodriguez total 16 · OK (redondeo)", () => {
-      const v = val(R, "Alfonso Rodriguez");
+    it("QA Dev 6 total 16 · OK (redondeo)", () => {
+      const v = val(R, "QA Dev 6");
       expect(v.total).toBeCloseTo(16, 2);
       expect(v.estado).toBe("OK");
     });
-    it("Joselyn Jimenez · On demand 11.5", () => {
-      const v = val(R, "Joselyn Jimenez");
+    it("Email OnDem 2 · On demand 11.5", () => {
+      const v = val(R, "Email OnDem 2");
       expect(v.tipo).toBe("On demand");
       expect(v.total).toBeCloseTo(11.5, 2);
     });
-    it("Andres Rockbrand existe con total 0", () => {
-      const v = val(R, "Andres Rockbrand");
+    it("QA OnDem 1 existe con total 0", () => {
+      const v = val(R, "QA OnDem 1");
       expect(!!v).toBe(true);
       expect(v.total).toBeCloseTo(0, 2);
     });
-    it("Minor Cascante (PM) no aparece", () => expect(!!val(R, "Minor Cascante")).toBe(false));
-    it("Juanita (No incluir) no aparece", () => expect(!!val(R, "Juanita Gómez Moreno")).toBe(false));
+    it("QA PM (PM) no aparece", () => expect(!!val(R, "QA PM")).toBe(false));
+    it("Ops 1 (No incluir) no aparece", () => expect(!!val(R, "Ops 1")).toBe(false));
   });
 
   describe("Caso 4 · Horas PM (semana 1)", () => {
@@ -164,7 +164,7 @@ async function main() {
     it("con feriado el jue 01/10, los días hábiles bajan a 1", () => expect(RH.weekdays.length).toBe(1));
     it("el feriado no genera horas de PM", () => expect(RH.pm.some((p) => p.date === "2026-10-01")).toBe(false));
     it("el mínimo de un fijo baja a 8 (1 día hábil)", () => {
-      const v = RH.validation.find((x) => x.dev === "Cesar Jesus");
+      const v = RH.validation.find((x) => x.dev === "Email Dev 3");
       expect(v.min).toBe(8);
     });
   });
@@ -180,9 +180,9 @@ async function main() {
     it("override 'No' baja en 1 las tareas del equipo/día", () => expect(pmWeb2.tareas).toBe(pmWeb.tareas - 1));
   });
 
-  describe("Caso 5 · Filas ocultas de Cristian (113-117)", () => {
-    const v = R.validation.find((x) => x.dev === "Cristian Villamizar");
-    it("Cristian queda con 10 h el 01/10 (8 reales + 2 duplicadas)", () =>
+  describe("Caso 5 · Filas ocultas (Standard Dev 3, filas 113-117)", () => {
+    const v = R.validation.find((x) => x.dev === "Standard Dev 3");
+    it("queda con 10 h el 01/10 (8 reales + 2 duplicadas)", () =>
       expect(v.perDay["2026-10-01"]).toBeCloseTo(10, 2));
     const dupRows = R.issues.filter((i) => /duplicado/.test(i.tipo) && [113, 114, 115].includes(+i.row)).length;
     it("genera duplicado en las filas 113, 114 y 115", () => expect(dupRows).toBe(3));
