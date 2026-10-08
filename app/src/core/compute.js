@@ -232,10 +232,11 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
       return { ...p, perDay, total, min, max, estado, overDays };
     });
 
-  // Horas del PM por equipo y día hábil.
+  // Horas del PM por equipo y día hábil. Sin PM asignado no se calcula ni se muestra.
   const teams = [...new Set(dev.map((r) => r.equipo))].sort();
   const pm = [];
   for (const t of teams) {
+    if (!teamPM[t]) continue; // equipo sin PM/lead asignado: no aparece hasta que se ponga
     for (const d of weekdays) {
       const fixedVal = validation.filter((v) => v.equipo === t && v.tipo === "Fijo");
       const devsFijos = fixedVal.filter((v) => v.perDay[d] > 0).length;
@@ -246,7 +247,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
       pm.push({
         equipo: t,
         date: d,
-        pm: teamPM[t] || "PM SIN ASIGNAR",
+        pm: teamPM[t],
         devsFijos,
         horasFijos,
         prom,
