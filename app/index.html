@@ -21,7 +21,7 @@
         </div>
 
         <nav class="nav" id="nav" role="tablist" aria-label="Secciones">
-          <button class="navitem" role="tab" data-tab="resumen" aria-current="page"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 7h6v6"/></svg>Resumen</button>
+          <button class="navitem" role="tab" data-tab="resumen"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 7h6v6"/></svg>Resumen</button>
           <button class="navitem" role="tab" data-tab="tendencia"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M20 20H3"/></svg>Tendencia</button>
           <button class="navitem" role="tab" data-tab="validacion"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Validación</button>
           <button class="navitem" role="tab" data-tab="pm"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 10.5-4"/><circle cx="17.5" cy="16.5" r="4.5"/><path d="M17.5 14.5v2l1.4 1"/></svg>Horas PM</button>
@@ -29,6 +29,16 @@
           <button class="navitem" role="tab" data-tab="incidencias"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.5v.5"/></svg>Incidencias</button>
           <button class="navitem" role="tab" data-tab="config"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.3-2.5H9.4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.3 2.5h4.2l.3-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5a7 7 0 0 0 .1-1z"/></svg>Configuración</button>
         </nav>
+        <script>
+          // Marca la pestaña recordada antes de pintar, para que el activo no salte.
+          try {
+            var _t = (JSON.parse(localStorage.getItem("ts.ui.v1") || "{}").tab) || "resumen";
+            document.querySelectorAll("#nav .navitem").forEach(function (b) {
+              if (b.dataset.tab === _t) b.setAttribute("aria-current", "page");
+              else b.removeAttribute("aria-current");
+            });
+          } catch (e) {}
+        </script>
 
         <div class="sidefoot">
           <span class="dot"></span>
