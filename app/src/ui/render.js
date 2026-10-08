@@ -175,19 +175,29 @@ export function renderOverview(R) {
     { unit: " h", decimals: 0 }
   );
 
-  // Totales destacados: PTO, IDLE y Holidays (en tarjetas grandes).
-  const ptoH = R.dev.filter((d) => d.client === "RKD PTO").reduce((s, d) => s + d.hrs, 0);
-  const idleH = R.dev.filter((d) => d.client === "RKD IDLE").reduce((s, d) => s + d.hrs, 0);
+  // PTO e IDLE por equipo; Holidays como total (los feriados no son por equipo).
+  const ptoByTeam = {};
+  const idleByTeam = {};
+  for (const d of R.dev) {
+    if (d.client === "RKD PTO") ptoByTeam[d.equipo] = (ptoByTeam[d.equipo] || 0) + d.hrs;
+    else if (d.client === "RKD IDLE") idleByTeam[d.equipo] = (idleByTeam[d.equipo] || 0) + d.hrs;
+  }
   const holidays = (R.holidays || []).length;
   const bignum = (val, unit) => `<div class="bignum">${val}<small>${esc(unit)}</small></div>`;
+  const teamBody = (obj) => {
+    const entries = Object.entries(obj)
+      .filter(([, v]) => v > 0)
+      .map(([label, value]) => ({ label, value }));
+    return entries.length ? barList(entries, { unit: " h", decimals: 2 }) : bignum("0", "h");
+  };
 
   return (
     pageHeader(icon.trending(18), "Resumen", `Semana ${esc(R.label)} · ${R.dev.length} registros`) +
     renderBanner(R) +
     `<div class="stats">${renderStats(R)}</div>` +
     `<div class="charts">` +
-    chartCard("Total Hs PTO", bignum(f2(ptoH), "h"), icon.clock(16)) +
-    chartCard("Total Hs IDLE", bignum(f2(idleH), "h"), icon.clock(16)) +
+    chartCard("Hs PTO por equipo", teamBody(ptoByTeam), icon.clock(16)) +
+    chartCard("Hs IDLE por equipo", teamBody(idleByTeam), icon.clock(16)) +
     chartCard("Total Holidays", bignum(holidays, "días"), icon.calendar(16)) +
     `</div>` +
     `<div class="charts">` +
@@ -257,14 +267,14 @@ export function renderTasks(R, filter = {}) {
     `</div>`;
 
   const head =
-    `<thead><tr><th>Recurso</th><th>Fecha</th><th>Job Code</th><th>Tarea</th><th>Comentario</th>` +
-    `<th>Tipo</th><th class="n">Horas</th></tr></thead>`;
+    `<thead><tr><th>Job Code</th><th>Tarea</th><th>Comentario</th><th>Tipo</th>` +
+    `<th>Fecha</th><th>Recurso</th><th class="n">Horas</th></tr></thead>`;
   let body = "";
   for (const d of rows) {
     body +=
-      `<tr><td>${esc(d.res)}</td><td>${esc(fmtDay(d.date))}</td><td>${esc(d.client)}</td>` +
-      `<td>${esc(d.task.slice(0, 80))}</td><td>${esc((d.comm || "").slice(0, 40))}</td><td>${esc(d.typ || "")}</td>` +
-      `<td class="n">${f2(d.hrs)}</td></tr>`;
+      `<tr><td>${esc(d.client)}</td><td>${esc(d.task.slice(0, 80))}</td>` +
+      `<td>${esc((d.comm || "").slice(0, 40))}</td><td>${esc(d.typ || "")}</td>` +
+      `<td>${esc(fmtDay(d.date))}</td><td>${esc(d.res)}</td><td class="n">${f2(d.hrs)}</td></tr>`;
   }
   if (!rows.length) body = `<tr><td colspan="7"><div class="empty">Sin resultados para el filtro.</div></td></tr>`;
   return `${header}${toolbar}<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
