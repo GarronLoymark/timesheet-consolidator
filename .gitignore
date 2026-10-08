@@ -13,7 +13,7 @@ app/test/_out.xlsx
 *.log
 .vscode/
 
-# Artefactos de CI / Node (solo herramientas, no runtime de la app)
+# Artefactos de herramientas / Node (no runtime de la app)
 node_modules/
 package.json
 package-lock.json
