@@ -13,6 +13,7 @@ import { jobcodesForExcel } from "../config.js";
 import { getConfig, saveConfig, resetConfig } from "./config-store.js";
 import {
   renderOverview,
+  renderTrend,
   renderValidation,
   filterValidation,
   validationTable,
@@ -120,6 +121,7 @@ function injectIcons() {
   el.download.insertAdjacentHTML("afterbegin", icon.download(16));
   const tabIcons = {
     resumen: icon.trending(16),
+    tendencia: icon.bars(16),
     validacion: icon.check(16),
     pm: icon.userClock(16),
     tareas: icon.tasks(16),
@@ -308,6 +310,18 @@ function selectTab(tab) {
   renderPanel();
 }
 
+// Resumen de métricas por cada semana detectada, para la vista Tendencia.
+function buildWeekSummaries() {
+  const parsed = mergedParsed();
+  return state.weeks.map((w) => {
+    const R = compute(parsed, state.cfg, w.from, w.to, state.overrides);
+    const fuera = R.validation.filter((v) => v.tipo === "Fijo" && v.estado !== "OK").length;
+    const horas = R.dev.reduce((s, d) => s + d.hrs, 0);
+    const horasPM = R.pm.reduce((s, p) => s + p.horasPM, 0);
+    return { label: w.label, from: w.from, to: w.to, personas: R.validation.length, fuera, horas, horasPM, incidencias: R.issues.length };
+  });
+}
+
 function renderPanel() {
   if (state.tab === "config") {
     setPanel(renderConfig(state.cfg));
@@ -318,6 +332,7 @@ function renderPanel() {
     return;
   }
   if (state.tab === "resumen") setPanel(renderOverview(state.R));
+  else if (state.tab === "tendencia") setPanel(renderTrend(buildWeekSummaries()));
   else if (state.tab === "validacion") setPanel(renderValidation(state.R, state.filter));
   else if (state.tab === "pm") setPanel(renderPM(state.R));
   else if (state.tab === "tareas") setPanel(renderTasks(state.R, { showAll: state.taskShowAll }));
@@ -325,8 +340,7 @@ function renderPanel() {
 }
 
 // Pinta el panel con una transición suave de entrada.
-function setPanel(html) {
-  el.panel.innerHTML = html;
+function setPanel(html) {  el.panel.innerHTML = html;
   el.panel.classList.remove("fade");
   void el.panel.offsetWidth;
   el.panel.classList.add("fade");

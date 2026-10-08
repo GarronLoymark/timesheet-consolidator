@@ -81,3 +81,43 @@ export function donut(segments, opts = {}) {
 export function chartCard(title, bodyHTML, iconHTML = "") {
   return `<div class="chartcard"><h3 class="chart-title">${iconHTML} ${title}</h3>${bodyHTML}</div>`;
 }
+
+/**
+ * Gráfico de línea para una métrica a lo largo de varias semanas.
+ * @param {Array<{label:string, value:number}>} points
+ * @param {{unit?:string, decimals?:number, color?:string}} [opts]
+ */
+export function lineChart(points, opts = {}) {
+  const unit = opts.unit || "";
+  const dec = opts.decimals ?? 0;
+  const color = opts.color || "#2e6f9e";
+  const w = 340;
+  const h = 130;
+  const padX = 30;
+  const padY = 22;
+  const max = Math.max(1, ...points.map((p) => p.value));
+  const n = points.length;
+  const x = (i) => (n <= 1 ? w / 2 : padX + (i * (w - 2 * padX)) / (n - 1));
+  const y = (v) => h - padY - (v / max) * (h - 2 * padY);
+  const poly = points.map((p, i) => `${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
+  const dots = points
+    .map((p, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(p.value).toFixed(1)}" r="3.5" fill="${color}"/>`)
+    .join("");
+  const vals = points
+    .map(
+      (p, i) =>
+        `<text x="${x(i).toFixed(1)}" y="${(y(p.value) - 8).toFixed(1)}" text-anchor="middle" class="axis-val">${Number(p.value).toFixed(dec)}${unit}</text>`
+    )
+    .join("");
+  const labels = points
+    .map((p, i) => `<text x="${x(i).toFixed(1)}" y="${h - 4}" text-anchor="middle" class="axis">${escAttr(p.label)}</text>`)
+    .join("");
+  return (
+    `<svg class="linechart" viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="xMidYMid meet">` +
+    `<polyline points="${poly}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>` +
+    dots +
+    vals +
+    labels +
+    `</svg>`
+  );
+}

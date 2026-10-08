@@ -3,9 +3,8 @@
 
 import { fmtDay, isWeekend } from "../core/index.js";
 import { icon } from "./icons.js";
-import { barList, donut, chartCard } from "./charts.js";
+import { barList, donut, chartCard, lineChart } from "./charts.js";
 import { COUNTRIES } from "../data/holidays.js";
-
 export function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
@@ -159,6 +158,36 @@ export function renderOverview(R) {
     chartCard("Horas registradas por equipo", hBars, icon.briefcase(16)) +
     `</div>`
   );
+}
+
+/** Página Tendencia: compara métricas entre las semanas detectadas. */
+export function renderTrend(summaries) {
+  const header = pageHeader(icon.trending(18), "Tendencia", "Comparación entre las semanas detectadas en los datos.");
+  if (!summaries || summaries.length <= 1) {
+    return `${header}<div class="empty">Carga datos con más de una semana para ver la comparación.</div>`;
+  }
+
+  const head =
+    `<thead><tr><th>Semana</th><th class="n">Personas</th><th class="n">Fijos fuera</th>` +
+    `<th class="n">Horas registradas</th><th class="n">Horas PM</th><th class="n">Incidencias</th></tr></thead>`;
+  const body = summaries
+    .map(
+      (s) =>
+        `<tr><td>${esc(s.label)}</td><td class="n">${s.personas}</td>` +
+        `<td class="n ${s.fuera ? "bad" : ""}">${s.fuera}</td><td class="n">${f2(s.horas)}</td>` +
+        `<td class="n">${f2(s.horasPM)}</td><td class="n ${s.incidencias ? "bad" : ""}">${s.incidencias}</td></tr>`
+    )
+    .join("");
+
+  const pts = (key, dec = 0) => summaries.map((s) => ({ label: s.label, value: s[key] }));
+  const charts =
+    `<div class="charts">` +
+    chartCard("Horas PM por semana", lineChart(pts("horasPM"), { unit: " h", decimals: 2, color: "#2e6f9e" }), icon.userClock(16)) +
+    chartCard("Fijos fuera de rango por semana", lineChart(pts("fuera"), { color: "#a8381f" }), icon.alert(16)) +
+    chartCard("Incidencias por semana", lineChart(pts("incidencias"), { color: "#d98324" }), icon.alert(16)) +
+    `</div>`;
+
+  return `${header}${charts}<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
 }
 
 export function renderValidation(R, filter = {}) {
