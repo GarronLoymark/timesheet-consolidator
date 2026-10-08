@@ -6,8 +6,8 @@
     <title>Reporte semanal de horas</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%232e6f9e'/%3E%3Cpath d='M12 7v5l3 2' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./src/styles.css" />
-    <script src="./vendor/xlsx.full.min.js"></script>
-    <script src="./vendor/exceljs.min.js"></script>
+    <script src="./vendor/xlsx.full.min.js" defer></script>
+    <script src="./vendor/exceljs.min.js" defer></script>
   </head>
   <body>
     <div class="app">
@@ -37,7 +37,7 @@
       </aside>
 
       <div class="main">
-        <header class="topbar">
+        <header class="topbar hidden">
           <div class="topbar-left hidden">
             <label class="f">Semana
               <select id="week"></select>
@@ -74,7 +74,7 @@
             </section>
           </div>
 
-          <div id="empty" class="onboard">
+          <div id="empty" class="onboard hidden">
             <div class="onboard-card">
               <div class="onboard-icon" id="onboardIcon"><svg class="ic" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M5 20h14"/></svg></div>
               <h2>Genera tu reporte en 3 pasos</h2>
@@ -86,6 +86,11 @@
               </ol>
               <button class="primary" id="onboardBtn">Cargar archivos</button>
             </div>
+          </div>
+
+          <div id="loading" class="loading">
+            <div class="loading-spin" aria-hidden="true"></div>
+            <p>Cargando tus datos…</p>
           </div>
         </main>
       </div>

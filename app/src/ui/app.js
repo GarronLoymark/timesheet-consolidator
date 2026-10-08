@@ -34,6 +34,7 @@ const el = {
   file: $("file"),
   files: $("files"),
   uploadPanel: $("uploadPanel"),
+  topbar: document.querySelector(".topbar"),
   topbarLeft: document.querySelector(".topbar-left"),
   week: $("week"),
   from: $("from"),
@@ -43,6 +44,7 @@ const el = {
   report: $("report"),
   panel: $("panel"),
   empty: $("empty"),
+  loading: $("loading"),
   download: $("btnDownload"),
   toast: $("toast"),
 };
@@ -103,11 +105,17 @@ async function init() {
     el.dedupe.checked = state.options.dedupe;
     // Primer uso: solo el onboarding; la carga y la semana aparecen al subir archivos.
     el.uploadPanel.classList.add("hidden");
+    el.topbar.classList.add("hidden");
     el.topbarLeft.classList.add("hidden");
+    // Mientras se revisa si hay datos guardados, muestra el loading (no el onboarding).
+    el.empty.classList.add("hidden");
+    el.loading.classList.remove("hidden");
     // Restaura los archivos subidos en una sesión anterior (si los hay).
     await restoreFiles();
   } catch (e) {
     console.error("Error al iniciar la app:", e);
+    const loading = document.getElementById("loading");
+    if (loading) loading.classList.add("hidden");
     const empty = document.getElementById("empty");
     if (empty) {
       empty.classList.remove("hidden");
@@ -238,9 +246,17 @@ async function restoreFiles() {
     saved = await getAllFiles();
   } catch (e) {
     console.warn("No se pudieron leer los archivos guardados:", e);
+  }
+  if (!saved.length) {
+    // Sin datos guardados: muestra el onboarding.
+    el.loading.classList.add("hidden");
+    el.empty.classList.remove("hidden");
     return;
   }
-  if (!saved.length) return;
+
+  // Deja que el navegador pinte el loading antes del parseo (bloqueante).
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
   for (const { name, bytes } of saved) {
     try {
       ingestWorkbook(name, bytes);
@@ -248,6 +264,7 @@ async function restoreFiles() {
       console.warn(`No se pudo restaurar ${name}:`, e);
     }
   }
+  el.loading.classList.add("hidden");
   renderFiles();
   refreshWeeks();
 }
@@ -292,6 +309,7 @@ function refreshWeeks() {
   const hasData = parsed.rows.length > 0;
   const hasFiles = state.timesheetFiles.length > 0;
   el.uploadPanel.classList.toggle("hidden", !hasFiles);
+  el.topbar.classList.toggle("hidden", !hasData);
   el.topbarLeft.classList.toggle("hidden", !hasData);
   el.report.classList.toggle("hidden", !hasData);
   el.empty.classList.toggle("hidden", hasFiles);

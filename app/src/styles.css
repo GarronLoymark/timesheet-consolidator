@@ -52,6 +52,8 @@ body {
   font: 15px/1.45 "Segoe UI", system-ui, -apple-system, sans-serif;
   font-variant-numeric: tabular-nums;
 }
+/* Reserva el espacio de la barra de scroll para que el layout no salte al cargar datos. */
+html { scrollbar-gutter: stable; }
 .wrap { max-width: 1280px; margin: 0 auto; padding: 22px 20px 72px; }
 
 .ic { flex: none; vertical-align: -3px; }
@@ -72,7 +74,7 @@ body {
   padding: 10px 12px; border-radius: 8px; gap: 11px; font-weight: 500; font-size: 14px;
 }
 .navitem:hover { background: var(--accent-soft); color: var(--ink); }
-.navitem[aria-current="page"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; box-shadow: var(--shadow); }
+.navitem[aria-current="page"] { background: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); }
 .navitem[aria-current="page"] .ic { color: var(--accent-ink); }
 .sidefoot {
   margin-top: auto; font-size: 12px; color: var(--muted); padding: 12px 10px 4px;
@@ -92,7 +94,7 @@ body {
 .panel-flush > div { padding: 14px 16px; }
 
 @media (max-width: 900px) {
-  .app { grid-template-columns: 1fr; }
+  .app { grid-template-columns: 1fr; align-content: start; }
   .sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; }
   .sidebar .brand { border-bottom: 0; padding: 4px 8px; margin: 0; }
   .nav { flex-direction: row; flex-wrap: wrap; margin: 0; }
@@ -297,6 +299,9 @@ td.wk { background: var(--wk) !important; color: var(--muted); }
 .hidden { display: none !important; }
 .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: -2px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 64px 8px; color: var(--muted); }
+.loading-spin { width: 34px; height: 34px; border: 3px solid var(--line-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+.loading p { margin: 0; font-size: 14px; }
 
 /* Gráficos */
 .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; margin-top: 6px; }
