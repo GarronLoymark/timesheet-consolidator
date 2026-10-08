@@ -180,6 +180,18 @@ async function main() {
     it("override 'No' baja en 1 las tareas del equipo/día", () => expect(pmWeb2.tareas).toBe(pmWeb.tareas - 1));
   });
 
+  describe("Caso 5 · Filas ocultas de Cristian (113-117)", () => {
+    const v = R.validation.find((x) => x.dev === "Cristian Villamizar");
+    it("Cristian queda con 10 h el 01/10 (8 reales + 2 duplicadas)", () =>
+      expect(v.perDay["2026-10-01"]).toBeCloseTo(10, 2));
+    const dupRows = R.issues.filter((i) => /duplicado/.test(i.tipo) && [113, 114, 115].includes(+i.row)).length;
+    it("genera duplicado en las filas 113, 114 y 115", () => expect(dupRows).toBe(3));
+    const subRows = R.issues.filter(
+      (i) => /Fila sin Client ni Task Name/.test(i.tipo) && [116, 117].includes(+i.row)
+    ).length;
+    it("excluye como subtotal las filas 116 y 117", () => expect(subRows).toBe(2));
+  });
+
   render(out);
 }
 
