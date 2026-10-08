@@ -23,6 +23,7 @@ import {
   renderConfig,
 } from "./render.js";
 import { HOLIDAYS_2026 } from "../data/holidays.js";
+import { putFile, getAllFiles, removeFile as removeStoredFile, clearFiles } from "./file-store.js";
 
 const XLSX = window.XLSX;
 const ExcelJS = window.ExcelJS;
@@ -103,6 +104,8 @@ async function init() {
     // Primer uso: solo el onboarding; la carga y la semana aparecen al subir archivos.
     el.uploadPanel.classList.add("hidden");
     el.topbarLeft.classList.add("hidden");
+    // Restaura los archivos subidos en una sesión anterior (si los hay).
+    await restoreFiles();
   } catch (e) {
     console.error("Error al iniciar la app:", e);
     const empty = document.getElementById("empty");
@@ -188,23 +191,9 @@ async function handleFiles(fileList) {
   for (const file of list) {
     try {
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array" });
-
-      // Toda pestaña JobCodes actualiza la lista guardada.
-      const jc = parseJobCodes(XLSX, wb);
-      if (jc && jc.length) {
-        state.cfg.jobcodes = jc;
-        saveConfig(state.cfg);
-      }
-
-      // El consolidado del cliente solo aporta Job Codes.
-      if (isClientWorkbook(wb)) {
-        state.timesheetFiles.push({ name: file.name, parsed: null, clientOnly: true });
-        continue;
-      }
-
-      const parsed = parseTimesheetWorkbook(XLSX, wb, file.name);
-      state.timesheetFiles.push({ name: file.name, parsed });
+      ingestWorkbook(file.name, buf);
+      // Se guarda una copia para no tener que volver a subirlo tras refrescar.
+      putFile(file.name, buf.slice(0)).catch((e) => console.warn("No se pudo guardar el archivo:", e));
     } catch (e) {
       console.error(e);
       setStatus(`Error leyendo ${file.name}: ${e.message}`);
@@ -215,6 +204,52 @@ async function handleFiles(fileList) {
   renderFiles();
   refreshWeeks();
   setStatus("");
+}
+
+// Procesa un libro ya leído (desde bytes): Job Codes, consolidado o timesheet.
+function ingestWorkbook(name, buf) {
+  const wb = XLSX.read(buf, { type: "array" });
+
+  // Toda pestaña JobCodes actualiza la lista guardada.
+  const jc = parseJobCodes(XLSX, wb);
+  if (jc && jc.length) {
+    state.cfg.jobcodes = jc;
+    saveConfig(state.cfg);
+  }
+
+  // El consolidado del cliente solo aporta Job Codes.
+  if (isClientWorkbook(wb)) {
+    if (!state.timesheetFiles.some((f) => f.name === name)) {
+      state.timesheetFiles.push({ name, parsed: null, clientOnly: true });
+    }
+    return;
+  }
+
+  const parsed = parseTimesheetWorkbook(XLSX, wb, name);
+  const idx = state.timesheetFiles.findIndex((f) => f.name === name);
+  if (idx >= 0) state.timesheetFiles[idx] = { name, parsed };
+  else state.timesheetFiles.push({ name, parsed });
+}
+
+// Restaura los archivos guardados en IndexedDB al abrir la app.
+async function restoreFiles() {
+  let saved = [];
+  try {
+    saved = await getAllFiles();
+  } catch (e) {
+    console.warn("No se pudieron leer los archivos guardados:", e);
+    return;
+  }
+  if (!saved.length) return;
+  for (const { name, bytes } of saved) {
+    try {
+      ingestWorkbook(name, bytes);
+    } catch (e) {
+      console.warn(`No se pudo restaurar ${name}:`, e);
+    }
+  }
+  renderFiles();
+  refreshWeeks();
 }
 
 function mergedParsed() {
@@ -244,7 +279,8 @@ function renderFiles() {
     .join("");
   el.files.querySelectorAll("button[data-rm]").forEach((b) =>
     b.addEventListener("click", () => {
-      state.timesheetFiles.splice(+b.dataset.rm, 1);
+      const [removed] = state.timesheetFiles.splice(+b.dataset.rm, 1);
+      if (removed) removeStoredFile(removed.name).catch(() => {});
       renderFiles();
       refreshWeeks();
     })
