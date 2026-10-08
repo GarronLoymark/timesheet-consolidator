@@ -195,8 +195,6 @@ nav.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-colo
 .searchbox input { padding-left: 32px; min-width: 220px; }
 .toggle { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--ink); cursor: pointer; }
 .count { font-size: 13px; color: var(--muted); margin-left: auto; }
-tr.ovr-row td { background: var(--input) !important; }
-select.ovr { min-width: 78px; padding: 4px 8px; }
 
 .scroll { overflow-x: auto; border-radius: 8px; }
 table { border-collapse: collapse; width: 100%; font-size: 13.5px; }

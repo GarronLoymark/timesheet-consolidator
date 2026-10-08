@@ -230,13 +230,17 @@ export function renderTasks(R, filter = {}) {
   const header = pageHeader(
     icon.tasks(18),
     "Horas por recurso y fecha",
-    "Detalle tipo Excel de las horas por DEV. Ajusta Sí/No si una tarea cuenta para el PM."
+    "Detalle de las horas por DEV, en el mismo orden del Excel."
   );
   if (R.dev.length === 0) return `${header}<div class="empty">Sin registros en el rango.</div>`;
 
   const f = { res: filter.res || "", dia: filter.dia || "" };
   const resources = [...new Set(R.dev.map((d) => d.res))].sort();
-  const rows = R.dev.filter((d) => (!f.res || d.res === f.res) && (!f.dia || d.date === f.dia));
+  // Mismo orden que el Excel: por archivo y por secuencia de aparición.
+  const rows = R.dev
+    .filter((d) => (!f.res || d.res === f.res) && (!f.dia || d.date === f.dia))
+    .slice()
+    .sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : (a.seq ?? 0) - (b.seq ?? 0)));
 
   const opt = (val, sel, label) => `<option value="${esc(val)}" ${val === sel ? "selected" : ""}>${esc(label ?? val)}</option>`;
   const toolbar =
@@ -249,23 +253,15 @@ export function renderTasks(R, filter = {}) {
 
   const head =
     `<thead><tr><th>Recurso</th><th>Fecha</th><th>Job Code</th><th>Tarea</th><th>Comentario</th>` +
-    `<th>Tipo</th><th class="n">Horas</th><th>Auto</th><th>Ajuste PM</th></tr></thead>`;
+    `<th>Tipo</th><th class="n">Horas</th></tr></thead>`;
   let body = "";
   for (const d of rows) {
-    const autoChip = d.auto === "Sí" ? `<span class="chip ok">Sí</span>` : `<span class="chip od">No</span>`;
-    const sel =
-      `<select class="ovr" data-ovr-key="${esc(d.key)}">` +
-      `<option value="" ${d.override === "" ? "selected" : ""}>Auto</option>` +
-      `<option value="Sí" ${d.override === "Sí" ? "selected" : ""}>Sí</option>` +
-      `<option value="No" ${d.override === "No" ? "selected" : ""}>No</option>` +
-      `</select>`;
-    const changed = d.override ? ' class="ovr-row"' : "";
     body +=
-      `<tr${changed}><td>${esc(d.res)}</td><td>${esc(fmtDay(d.date))}</td><td>${esc(d.client)}</td>` +
+      `<tr><td>${esc(d.res)}</td><td>${esc(fmtDay(d.date))}</td><td>${esc(d.client)}</td>` +
       `<td>${esc(d.task.slice(0, 80))}</td><td>${esc((d.comm || "").slice(0, 40))}</td><td>${esc(d.typ || "")}</td>` +
-      `<td class="n">${f2(d.hrs)}</td><td>${autoChip}</td><td>${sel}</td></tr>`;
+      `<td class="n">${f2(d.hrs)}</td></tr>`;
   }
-  if (!rows.length) body = `<tr><td colspan="9"><div class="empty">Sin resultados para el filtro.</div></td></tr>`;
+  if (!rows.length) body = `<tr><td colspan="7"><div class="empty">Sin resultados para el filtro.</div></td></tr>`;
   return `${header}${toolbar}<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
 }
 

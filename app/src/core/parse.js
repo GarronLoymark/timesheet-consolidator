@@ -62,6 +62,7 @@ export function parseTimesheetWorkbook(XLSX, workbook, fileName) {
   const rows = [];
   const issues = [];
   const tabs = [];
+  let seq = 0; // orden de aparición en el archivo (para mostrar como el Excel)
 
   for (const name of workbook.SheetNames) {
     const matrix = sheetToMatrix(XLSX, workbook.Sheets[name]);
@@ -130,6 +131,7 @@ export function parseTimesheetWorkbook(XLSX, workbook, fileName) {
       rows.push({
         kind: "data",
         ...where,
+        seq: seq++,
         client: clean(client),
         task: clean(task),
         comm: comm == null ? "" : clean(comm),

@@ -70,9 +70,6 @@ function loadOverrides() {
     return {};
   }
 }
-function saveOverrides() {
-  localStorage.setItem(OVR_KEY, JSON.stringify(state.overrides));
-}
 
 const UI_KEY = "ts.ui.v1";
 function loadUi() {
@@ -477,15 +474,6 @@ async function download() {
 function onConfigInput(e) {
   const t = e.target;
 
-  // Ajuste manual Sí/No por tarea.
-  if (t.classList.contains("ovr")) {
-    const key = t.getAttribute("data-ovr-key");
-    if (t.value) state.overrides[key] = t.value;
-    else delete state.overrides[key];
-    saveOverrides();
-    recompute();
-    return;
-  }
   if (t.id === "taskRes" || t.id === "taskDia") {
     if (t.id === "taskRes") state.taskFilter.res = t.value;
     else state.taskFilter.dia = t.value;
