@@ -44,6 +44,9 @@ export function renderStats(R) {
   const fijosFuera = R.validation.filter((v) => v.tipo === "Fijo" && v.estado !== "OK").length;
   const onDemandHoras = R.validation.filter((v) => v.tipo === "On demand").reduce((s, v) => s + v.total, 0);
   const horasPM = R.pm.reduce((s, p) => s + p.horasPM, 0);
+  const ptoH = R.dev.filter((d) => d.client === "RKD PTO").reduce((s, d) => s + d.hrs, 0);
+  const idleH = R.dev.filter((d) => d.client === "RKD IDLE").reduce((s, d) => s + d.hrs, 0);
+  const holidays = (R.holidays || []).length;
   const cards = [
     [icon.calendar(), esc(R.label), "Semana", false],
     [icon.rows(), R.dev.length, "Registros DEV", false],
@@ -51,7 +54,9 @@ export function renderStats(R) {
     [icon.alert(), fijosFuera, "Fijos fuera de rango", fijosFuera > 0],
     [icon.clock(), f2(onDemandHoras), "Horas on demand", false],
     [icon.userClock(), f2(horasPM), "Horas PM", false],
-    [icon.alert(), R.issues.length, "Incidencias", R.issues.length > 0],
+    [icon.clock(), f2(ptoH), "Total Hs PTO", false],
+    [icon.clock(), f2(idleH), "Total Hs IDLE", false],
+    [icon.calendar(), holidays, "Total Holidays", false],
   ];
   return cards
     .map(
