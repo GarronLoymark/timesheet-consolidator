@@ -19,4 +19,5 @@ export const icon = {
   search: (s) => svg('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>', s),
   trending: (s) => svg('<path d="M3 17l6-6 4 4 7-7"/><path d="M14 7h6v6"/>', s),
   briefcase: (s) => svg('<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>', s),
+  tasks: (s) => svg('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M8.5 12l1.5 1.5 3-3"/><path d="M8.5 17l1.5 1.5 3-3"/>', s),
 };

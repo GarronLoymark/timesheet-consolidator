@@ -16,7 +16,7 @@ export const DEFAULT_PARAMS = { minDia: 8, maxDia: 9, umbral: 8.5, pmNormal: 8, 
  * @param {string} from ISO desde.
  * @param {string} to   ISO hasta.
  */
-export function compute(parsed, cfg, from, to) {
+export function compute(parsed, cfg, from, to, overrides = {}) {
   const params = { ...DEFAULT_PARAMS, ...(cfg.params || {}) };
   const keywords = (cfg.keywords || []).filter((k) => k !== "" && k != null);
   const known = new Set((cfg.jobcodes || []).map((j) => String(j[0]).toUpperCase()));
@@ -112,6 +112,10 @@ export function compute(parsed, cfg, from, to) {
     }
 
     row.auto = autoCount(row, person, keywords);
+    // Ajuste manual del PM: si existe override para esta fila, prevalece sobre auto.
+    row.key = `${r.file}|${r.tab}|${r.row}`;
+    row.override = overrides[row.key] === "Sí" || overrides[row.key] === "No" ? overrides[row.key] : "";
+    row.final = row.override || row.auto;
     dev.push(row);
   }
 
@@ -212,7 +216,7 @@ export function compute(parsed, cfg, from, to) {
       const devsFijos = fixedVal.filter((v) => v.perDay[d] > 0).length;
       const horasFijos = fixedVal.reduce((s, v) => s + v.perDay[d], 0);
       const prom = devsFijos ? horasFijos / devsFijos : 0;
-      const tareas = dev.filter((r) => r.equipo === t && r.date === d && r.auto === "Sí").length;
+      const tareas = dev.filter((r) => r.equipo === t && r.date === d && r.final === "Sí").length;
       const horasPM = tareas === 0 ? 0 : prom >= params.umbral ? params.pmAlta : params.pmNormal;
       pm.push({
         equipo: t,
@@ -228,7 +232,7 @@ export function compute(parsed, cfg, from, to) {
     }
   }
 
-  const weekendTasks = dev.filter((r) => isWeekend(r.date) && r.auto === "Sí").length;
+  const weekendTasks = dev.filter((r) => isWeekend(r.date) && r.final === "Sí").length;
 
   return {
     params,

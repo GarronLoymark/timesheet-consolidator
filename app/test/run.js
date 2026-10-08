@@ -169,6 +169,17 @@ async function main() {
     });
   });
 
+  describe("Ajuste manual Sí/No (override)", () => {
+    const base = compute(parsed, cfg, "2026-10-01", "2026-10-04");
+    it("sin overrides, la regla final es igual a la automática", () =>
+      expect(base.dev.every((d) => d.final === d.auto)).toBe(true));
+    const pmWeb = base.pm.find((p) => p.equipo === "Web" && p.date === "2026-10-01");
+    const target = base.dev.find((d) => d.equipo === "Web" && d.date === "2026-10-01" && d.final === "Sí");
+    const RH = compute(parsed, cfg, "2026-10-01", "2026-10-04", { [target.key]: "No" });
+    const pmWeb2 = RH.pm.find((p) => p.equipo === "Web" && p.date === "2026-10-01");
+    it("override 'No' baja en 1 las tareas del equipo/día", () => expect(pmWeb2.tareas).toBe(pmWeb.tareas - 1));
+  });
+
   render(out);
 }
 

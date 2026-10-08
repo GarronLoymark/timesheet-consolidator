@@ -4,6 +4,7 @@
 import { fmtDay, isWeekend } from "../core/index.js";
 import { icon } from "./icons.js";
 import { barList, donut, chartCard } from "./charts.js";
+import { COUNTRIES } from "../data/holidays.js";
 
 export function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -228,6 +229,47 @@ export function renderPM(R) {
   return `${header}<div class="teamcards">${cards}</div><div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
 }
 
+export function renderTasks(R, opts = {}) {
+  const showAll = !!opts.showAll;
+  const isMeeting = (d) => {
+    const c = d.client.toUpperCase();
+    return c === "RKD MTG" || c === "RKD MTGINT";
+  };
+  const rows = R.dev.filter((d) => showAll || isMeeting(d));
+  const header = pageHeader(
+    icon.tasks(18),
+    "Tareas y ajuste manual",
+    "Marca Sí/No para forzar si una tarea cuenta para el PM. Se recalcula al instante."
+  );
+  const toolbar =
+    `<div class="toolbar">` +
+    `<label class="toggle"><input id="taskAll" type="checkbox" ${showAll ? "checked" : ""}> Mostrar todas las tareas</label>` +
+    `<span class="count">${rows.length} tareas${showAll ? "" : " (solo reuniones RKD)"}</span>` +
+    `</div>`;
+
+  if (rows.length === 0)
+    return `${header}${toolbar}<div class="empty">No hay reuniones RKD en el rango. Activa "Mostrar todas las tareas".</div>`;
+
+  const head =
+    `<thead><tr><th>Recurso</th><th>Día</th><th>Job Code</th><th>Tarea</th><th>Auto</th><th>Ajuste</th></tr></thead>`;
+  let body = "";
+  for (const d of rows) {
+    const autoChip =
+      d.auto === "Sí" ? `<span class="chip ok">Sí</span>` : `<span class="chip od">No</span>`;
+    const sel =
+      `<select class="ovr" data-ovr-key="${esc(d.key)}">` +
+      `<option value="" ${d.override === "" ? "selected" : ""}>Auto</option>` +
+      `<option value="Sí" ${d.override === "Sí" ? "selected" : ""}>Sí</option>` +
+      `<option value="No" ${d.override === "No" ? "selected" : ""}>No</option>` +
+      `</select>`;
+    const changed = d.override ? ' class="ovr-row"' : "";
+    body +=
+      `<tr${changed}><td>${esc(d.res)}</td><td>${esc(fmtDay(d.date))}</td><td>${esc(d.client)}</td>` +
+      `<td>${esc(d.task.slice(0, 70))}</td><td>${autoChip}</td><td>${sel}</td></tr>`;
+  }
+  return `${header}${toolbar}<div class="scroll"><table>${head}<tbody>${body}</tbody></table></div>`;
+}
+
 export function renderIssues(R) {
   const header = pageHeader(
     icon.alert(18),
@@ -322,7 +364,7 @@ export function renderConfig(cfg) {
   const feriados = (cfg.feriados || [])
     .map(
       (f, i) =>
-        `<tr><td><input data-fer="${i}" data-k="fecha" type="date" value="${esc(f.fecha || "")}"></td><td><input data-fer="${i}" data-k="nombre" value="${esc(f.nombre || "")}" placeholder="Nombre"></td></tr>`
+        `<tr><td><input data-fer="${i}" data-k="fecha" type="date" value="${esc(f.fecha || "")}"></td><td><input data-fer="${i}" data-k="nombre" value="${esc(f.nombre || "")}" placeholder="Nombre"></td><td><button class="x" data-del-fer="${i}" title="Quitar feriado" aria-label="Quitar feriado"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></td></tr>`
     )
     .join("");
 
@@ -367,8 +409,12 @@ export function renderConfig(cfg) {
       <div class="cfg-card">
         <h3>${icon.calendar(16)} Feriados</h3>
         <p class="note">No cuentan como día hábil: bajan el mínimo/máximo y no generan horas de PM.</p>
+        <div class="row" style="gap:8px;margin-bottom:10px">
+          <select id="cfgHolidayCountry">${COUNTRIES.map((c) => `<option value="${c.code}">${esc(c.label)}</option>`).join("")}</select>
+          <button id="cfgAddHolidays">Agregar feriados 2026</button>
+        </div>
         <div class="scroll"><table id="cfgFeriados">
-          <thead><tr><th>Fecha</th><th>Nombre</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Nombre</th><th></th></tr></thead>
           <tbody>${feriados}</tbody>
         </table></div>
         <button id="cfgAddFeriado" class="addbtn">+ Agregar feriado</button>

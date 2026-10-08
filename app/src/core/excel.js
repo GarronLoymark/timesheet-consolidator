@@ -147,6 +147,7 @@ export async function buildXlsx(ExcelJS, R, jobcodes) {
           };
     wsC.getCell(r, 14).fill = YEL;
     wsC.getCell(r, 14).dataValidation = { type: "list", allowBlank: true, formulae: ['"Sí,No"'] };
+    if (d.override === "Sí" || d.override === "No") wsC.getCell(r, 14).value = d.override;
     wsC.getCell(r, 15).value = { formula: `IF(N${r}<>"",N${r},M${r})` };
     wsC.getCell(r, 16).value = `${d.tab} fila ${d.row}`;
   });

@@ -17,10 +17,12 @@ import {
   filterValidation,
   validationTable,
   renderPM,
+  renderTasks,
   renderIssues,
   renderConfig,
 } from "./render.js";
 import { icon } from "./icons.js";
+import { HOLIDAYS_2026 } from "../data/holidays.js";
 
 const XLSX = window.XLSX;
 const ExcelJS = window.ExcelJS;
@@ -50,8 +52,22 @@ const state = {
   R: null,
   tab: "resumen",
   filter: { q: "", soloProblemas: false },
+  overrides: {}, // ajuste manual Sí/No por fila (key file|tab|row)
+  taskShowAll: false,
   ui: {}, // preferencias recordadas (semana/filtros/pestaña)
 };
+
+const OVR_KEY = "ts.overrides.v1";
+function loadOverrides() {
+  try {
+    return JSON.parse(localStorage.getItem(OVR_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+function saveOverrides() {
+  localStorage.setItem(OVR_KEY, JSON.stringify(state.overrides));
+}
 
 const UI_KEY = "ts.ui.v1";
 function loadUi() {
@@ -74,6 +90,7 @@ async function init() {
   state.cfg = await getConfig();
   const ui = loadUi();
   state.ui = ui;
+  state.overrides = loadOverrides();
   if (ui.tab) state.tab = ui.tab;
   if (ui.filter) state.filter = { q: ui.filter.q || "", soloProblemas: !!ui.filter.soloProblemas };
   injectIcons();
@@ -105,6 +122,7 @@ function injectIcons() {
     resumen: icon.trending(16),
     validacion: icon.check(16),
     pm: icon.userClock(16),
+    tareas: icon.tasks(16),
     incidencias: icon.alert(16),
     config: icon.settings(16),
   };
@@ -278,7 +296,7 @@ function recompute() {
   if (!from || !to || from > to) return;
   const parsed = mergedParsed();
   if (!parsed.rows.length) return;
-  state.R = compute(parsed, state.cfg, from, to);
+  state.R = compute(parsed, state.cfg, from, to, state.overrides);
   el.download.disabled = false;
   renderPanel();
 }
@@ -302,6 +320,7 @@ function renderPanel() {
   if (state.tab === "resumen") setPanel(renderOverview(state.R));
   else if (state.tab === "validacion") setPanel(renderValidation(state.R, state.filter));
   else if (state.tab === "pm") setPanel(renderPM(state.R));
+  else if (state.tab === "tareas") setPanel(renderTasks(state.R, { showAll: state.taskShowAll }));
   else if (state.tab === "incidencias") setPanel(renderIssues(state.R));
 }
 
@@ -394,6 +413,21 @@ async function download() {
 function onConfigInput(e) {
   const t = e.target;
 
+  // Ajuste manual Sí/No por tarea.
+  if (t.classList.contains("ovr")) {
+    const key = t.getAttribute("data-ovr-key");
+    if (t.value) state.overrides[key] = t.value;
+    else delete state.overrides[key];
+    saveOverrides();
+    recompute();
+    return;
+  }
+  if (t.id === "taskAll") {
+    state.taskShowAll = t.checked;
+    if (state.R) setPanel(renderTasks(state.R, { showAll: state.taskShowAll }));
+    return;
+  }
+
   // Filtro de la tabla de Validación: actualiza solo el cuerpo para no perder el foco.
   if (t.id === "valSearch" || t.id === "valSolo") {
     if (t.id === "valSearch") state.filter.q = t.value;
@@ -447,6 +481,14 @@ function onConfigClick(e) {
     toast(`"${name}" agregado al roster. Asígnale equipo y tipo en Configuración.`);
     return;
   }
+  const delFer = t.closest && t.closest("[data-del-fer]");
+  if (delFer) {
+    state.cfg.feriados.splice(+delFer.getAttribute("data-del-fer"), 1);
+    saveConfig(state.cfg);
+    recomputeKeepTab();
+    el.panel.innerHTML = renderConfig(state.cfg);
+    return;
+  }
   if (t.id === "cfgAddPerson") {
     state.cfg.roster.push({ dev: "", equipo: "", pm: "", tipo: "Fijo", cuentaPM: "Sí" });
     saveConfig(state.cfg);
@@ -461,6 +503,24 @@ function onConfigClick(e) {
     state.cfg.feriados.push({ fecha: "", nombre: "" });
     saveConfig(state.cfg);
     el.panel.innerHTML = renderConfig(state.cfg);
+  } else if (t.id === "cfgAddHolidays") {
+    const sel = document.getElementById("cfgHolidayCountry");
+    const code = sel ? sel.value : "CR";
+    state.cfg.feriados = state.cfg.feriados || [];
+    const existing = new Set(state.cfg.feriados.map((f) => f.fecha));
+    let added = 0;
+    for (const h of HOLIDAYS_2026[code] || []) {
+      if (!existing.has(h.fecha)) {
+        state.cfg.feriados.push({ ...h });
+        existing.add(h.fecha);
+        added++;
+      }
+    }
+    state.cfg.feriados.sort((a, b) => (a.fecha || "").localeCompare(b.fecha || ""));
+    saveConfig(state.cfg);
+    recomputeKeepTab();
+    el.panel.innerHTML = renderConfig(state.cfg);
+    toast(`${added} feriado(s) agregado(s). Revísalos y edita lo que haga falta.`);
   } else if (t.id === "cfgReset") {
     resetConfig().then((cfg) => {
       state.cfg = cfg;
@@ -477,7 +537,7 @@ function recomputeKeepTab() {
   if (!from || !to || from > to) return;
   const parsed = mergedParsed();
   if (!parsed.rows.length) return;
-  state.R = compute(parsed, state.cfg, from, to);
+  state.R = compute(parsed, state.cfg, from, to, state.overrides);
 }
 
 function flashSaved() {
