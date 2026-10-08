@@ -113,7 +113,11 @@ export function validationTable(R, filtered) {
           : v.estado === "OK"
           ? `<span class="chip ok">${icon.check(14)} OK</span>`
           : `<span class="chip bad">${icon.alert(14)} ${esc(v.estado)}</span>`;
-      body += `<tr><td>${esc(v.dev)}</td><td>${esc(v.tipo)}</td>${cells}<td class="n">${f2(v.total)}</td><td>${chip}</td></tr>`;
+      const detalle =
+        v.overDays && v.overDays.length
+          ? `<div class="sub">${v.overDays.map((o) => `${esc(fmtDay(o.date))}: ${f2(v.perDay[o.date])} h`).join(" · ")}</div>`
+          : "";
+      body += `<tr><td>${esc(v.dev)}</td><td>${esc(v.tipo)}</td>${cells}<td class="n">${f2(v.total)}</td><td>${chip}${detalle}</td></tr>`;
     }
   }
   return `<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;

@@ -198,11 +198,15 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
       let min = null;
       let max = null;
       let estado = "On demand";
+      let overDays = [];
       if (p.tipo !== "On demand") {
         min = weekdays.length * params.minDia;
         max = weekdays.length * params.maxDia;
         // Validación por día: ningún día hábil puede pasar del máximo diario.
-        const over = weekdays.reduce((s, d) => s + Math.max(0, perDay[d] - params.maxDia), 0);
+        overDays = weekdays
+          .filter((d) => perDay[d] > params.maxDia + 1e-9)
+          .map((d) => ({ date: d, over: perDay[d] - params.maxDia }));
+        const over = overDays.reduce((s, o) => s + o.over, 0);
         const deficit = Math.max(0, min - total);
         estado =
           over > 1e-9
@@ -211,7 +215,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
             ? `Faltan ${deficit.toFixed(2)} h`
             : "OK";
       }
-      return { ...p, perDay, total, min, max, estado };
+      return { ...p, perDay, total, min, max, estado, overDays };
     });
 
   // Horas del PM por equipo y día hábil.
