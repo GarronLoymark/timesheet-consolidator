@@ -151,8 +151,9 @@ Para cada persona del roster que no sea `PM` ni `No incluir`, más cualquier per
 - `horas[día]` = suma de Hours de sus filas de datos en ese día.
 - `total` = suma de todos los días del rango, incluido el fin de semana.
 - **Fijo:**
-  - `mínimo = díasHábiles × minDia` y `máximo = díasHábiles × maxDia` (por defecto 8 y 9; en Q4 se permiten semanas de 45 h).
-  - Estado: `Faltan (mínimo − total) h` si `total < mínimo`, `Excede (total − máximo) h` si `total > máximo`, y `OK` en otro caso. Las diferencias se muestran con 2 decimales.
+  - `mínimo = díasHábiles × minDia` (por defecto 8 y 9; en Q4 se permiten semanas de 45 h).
+  - El máximo se valida **por día**: ningún día hábil puede pasar de `maxDia`. `exceso = Σ máx(0, horas[día] − maxDia)` sobre los días hábiles.
+  - Estado: `Excede (exceso) h` si algún día pasa de `maxDia`; si no, `Faltan (mínimo − total) h` cuando `total < mínimo`; en otro caso `OK`. Las diferencias se muestran con 2 decimales.
   - Cada día hábil con `horas < minDia` o `horas > maxDia` se marca en rojo. Un día con 0 h también se marca.
 - **On demand:** sin mínimo ni máximo. Estado: `On demand: X h en la semana`.
 - Orden: por equipo, primero los fijos y luego los on demand, y alfabético dentro de cada grupo.

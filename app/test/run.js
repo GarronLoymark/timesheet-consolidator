@@ -91,20 +91,20 @@ async function main() {
   });
 
   describe("Caso 3 · Validación (semana 1)", () => {
-    it("Email Dev 3 total 18.25 · Excede 0.25", () => {
+    it("Email Dev 3 total 18.25 · Excede 1.25 (día de 10.25)", () => {
       const v = val(R, "Email Dev 3");
       expect(v.total).toBeCloseTo(18.25, 2);
-      expect(v.estado).toBe("Excede 0.25 h");
+      expect(v.estado).toBe("Excede 1.25 h");
     });
     it("Web Dev 2 total 14.5 · Faltan 1.50", () => {
       const v = val(R, "Web Dev 2");
       expect(v.total).toBeCloseTo(14.5, 2);
       expect(v.estado).toBe("Faltan 1.50 h");
     });
-    it("Standard Dev 3 total 18 · OK", () => {
+    it("Standard Dev 3 total 18 · Excede 1.00 (día de 10h)", () => {
       const v = val(R, "Standard Dev 3");
       expect(v.total).toBeCloseTo(18, 2);
-      expect(v.estado).toBe("OK");
+      expect(v.estado).toBe("Excede 1.00 h");
     });
     it("QA Dev 6 total 16 · OK (redondeo)", () => {
       const v = val(R, "QA Dev 6");

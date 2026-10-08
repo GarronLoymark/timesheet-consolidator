@@ -45,7 +45,7 @@ Incidencias esperadas por tipo:
 
 | Persona | Tipo | Jue 01/10 | Vie 02/10 | Sáb 03/10 | Dom 04/10 | Total | Estado |
 |---|---|---|---|---|---|---|---|
-| Cesar Jesus | Fijo | 10.25 | 8 | – | – | 18.25 | Excede 0.25 h (01/10 en rojo) |
+| Cesar Jesus | Fijo | 10.25 | 8 | – | – | 18.25 | Excede 1.25 h (01/10 pasa de 9) |
 | Juan Felipe | Fijo | 8 | 6.5 | – | – | 14.5 | Faltan 1.50 h (02/10 en rojo) |
 | Cristian Villamizar | Fijo | 10 | 8 | – | – | 18 | OK (01/10 en rojo por más de 9 h) |
 | Allan Gamboa | Fijo | 8.95 | 8 | – | – | 16.95 | OK |

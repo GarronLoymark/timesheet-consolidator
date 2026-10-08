@@ -201,11 +201,14 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
       if (p.tipo !== "On demand") {
         min = weekdays.length * params.minDia;
         max = weekdays.length * params.maxDia;
+        // Validación por día: ningún día hábil puede pasar del máximo diario.
+        const over = weekdays.reduce((s, d) => s + Math.max(0, perDay[d] - params.maxDia), 0);
+        const deficit = Math.max(0, min - total);
         estado =
-          total < min - 1e-9
-            ? `Faltan ${(min - total).toFixed(2)} h`
-            : total > max + 1e-9
-            ? `Excede ${(total - max).toFixed(2)} h`
+          over > 1e-9
+            ? `Excede ${over.toFixed(2)} h`
+            : deficit > 1e-9
+            ? `Faltan ${deficit.toFixed(2)} h`
             : "OK";
       }
       return { ...p, perDay, total, min, max, estado };
