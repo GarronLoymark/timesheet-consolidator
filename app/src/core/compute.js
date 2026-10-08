@@ -124,7 +124,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
   // sumando (regla del negocio); con dedupe se marcan y se excluyen.
   const seen = new Map();
   for (const r of dev) {
-    const k = [r.file, r.tab, r.client, r.task, r.comm, r.date, r.hrs].join("|");
+    const k = [r.file, r.tab, r.res, r.client, r.task, r.comm, r.date, r.hrs].join("|");
     if (seen.has(k)) {
       r.dup = true;
       issues.push({
