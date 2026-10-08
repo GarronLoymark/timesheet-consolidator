@@ -8,14 +8,11 @@ import {
   weeksFromRows,
   compute,
   buildXlsx,
-  buildConsolidadoRows,
-  consolidadoToTSV,
 } from "../core/index.js";
 import { jobcodesForExcel } from "../config.js";
 import { getConfig, saveConfig, resetConfig } from "./config-store.js";
 import {
-  renderBanner,
-  renderStats,
+  renderOverview,
   renderValidation,
   filterValidation,
   validationTable,
@@ -33,18 +30,16 @@ const el = {
   drop: $("drop"),
   file: $("file"),
   files: $("files"),
-  controls: $("controls"),
+  uploadPanel: $("uploadPanel"),
+  topbarLeft: document.querySelector(".topbar-left"),
   week: $("week"),
   from: $("from"),
   to: $("to"),
   status: $("status"),
   report: $("report"),
-  banner: $("banner"),
-  stats: $("stats"),
   panel: $("panel"),
   empty: $("empty"),
   download: $("btnDownload"),
-  copy: $("btnCopy"),
   toast: $("toast"),
 };
 
@@ -53,16 +48,48 @@ const state = {
   timesheetFiles: [], // { name, parsed }
   weeks: [],
   R: null,
-  tab: "validacion",
+  tab: "resumen",
   filter: { q: "", soloProblemas: false },
+  ui: {}, // preferencias recordadas (semana/filtros/pestaña)
 };
+
+const UI_KEY = "ts.ui.v1";
+function loadUi() {
+  try {
+    return JSON.parse(localStorage.getItem(UI_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+function saveUi() {
+  localStorage.setItem(
+    UI_KEY,
+    JSON.stringify({ tab: state.tab, filter: state.filter, weekFrom: el.from.value, weekTo: el.to.value })
+  );
+}
 
 init();
 
 async function init() {
   state.cfg = await getConfig();
+  const ui = loadUi();
+  state.ui = ui;
+  if (ui.tab) state.tab = ui.tab;
+  if (ui.filter) state.filter = { q: ui.filter.q || "", soloProblemas: !!ui.filter.soloProblemas };
   injectIcons();
+  highlightTab();
   wireEvents();
+  // Primer uso: solo el onboarding; la carga y la semana aparecen al subir archivos.
+  el.uploadPanel.classList.add("hidden");
+  el.topbarLeft.classList.add("hidden");
+}
+
+// Marca la pestaña activa en la navegación lateral.
+function highlightTab() {
+  document.querySelectorAll("#nav .navitem").forEach((b) => {
+    if (b.dataset.tab === state.tab) b.setAttribute("aria-current", "page");
+    else b.removeAttribute("aria-current");
+  });
 }
 
 // Iconos SVG inyectados desde el módulo (una sola fuente, sin duplicar en el HTML).
@@ -71,10 +98,17 @@ function injectIcons() {
   if (logo) logo.innerHTML = icon.clock(24);
   const dropIcon = $("dropIcon");
   if (dropIcon) dropIcon.innerHTML = icon.upload(26);
+  const onboardIcon = $("onboardIcon");
+  if (onboardIcon) onboardIcon.innerHTML = icon.upload(30);
   el.download.insertAdjacentHTML("afterbegin", icon.download(16));
-  el.copy.insertAdjacentHTML("afterbegin", icon.copy(16));
-  const tabIcons = { validacion: icon.check(16), pm: icon.userClock(16), incidencias: icon.alert(16), config: icon.settings(16) };
-  document.querySelectorAll("nav.tabs button").forEach((b) => {
+  const tabIcons = {
+    resumen: icon.trending(16),
+    validacion: icon.check(16),
+    pm: icon.userClock(16),
+    incidencias: icon.alert(16),
+    config: icon.settings(16),
+  };
+  document.querySelectorAll("#nav .navitem").forEach((b) => {
     const ic = tabIcons[b.dataset.tab];
     if (ic) b.insertAdjacentHTML("afterbegin", ic);
   });
@@ -82,6 +116,8 @@ function injectIcons() {
 
 function wireEvents() {
   el.drop.addEventListener("click", () => el.file.click());
+  const onboardBtn = $("onboardBtn");
+  if (onboardBtn) onboardBtn.addEventListener("click", () => el.file.click());
   el.drop.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -110,19 +146,26 @@ function wireEvents() {
       el.to.value = opt.to;
     }
     recompute();
+    saveUi();
   });
-  el.from.addEventListener("change", recompute);
-  el.to.addEventListener("change", recompute);
+  el.from.addEventListener("change", () => {
+    recompute();
+    saveUi();
+  });
+  el.to.addEventListener("change", () => {
+    recompute();
+    saveUi();
+  });
 
-  document.querySelectorAll("nav.tabs button").forEach((b) =>
+  document.querySelectorAll("#nav .navitem").forEach((b) =>
     b.addEventListener("click", () => selectTab(b.dataset.tab))
   );
 
   el.download.addEventListener("click", download);
-  el.copy.addEventListener("click", copyForClient);
   el.panel.addEventListener("input", onConfigInput);
   el.panel.addEventListener("change", onConfigInput);
   el.panel.addEventListener("click", onConfigClick);
+  el.panel.addEventListener("click", onSortClick);
 }
 
 async function handleFiles(fileList) {
@@ -199,9 +242,11 @@ function renderFiles() {
 function refreshWeeks() {
   const parsed = mergedParsed();
   const hasData = parsed.rows.length > 0;
-  el.controls.classList.toggle("hidden", !hasData);
+  const hasFiles = state.timesheetFiles.length > 0;
+  el.uploadPanel.classList.toggle("hidden", !hasFiles);
+  el.topbarLeft.classList.toggle("hidden", !hasData);
   el.report.classList.toggle("hidden", !hasData);
-  el.empty.classList.toggle("hidden", state.timesheetFiles.length > 0);
+  el.empty.classList.toggle("hidden", hasFiles);
 
   if (!hasData) {
     state.R = null;
@@ -215,7 +260,12 @@ function refreshWeeks() {
       .map((w, i) => `<option value="${i}">${escapeHtml(w.label)} (${w.from} → ${w.to})</option>`)
       .join("") + `<option value="custom">Rango personalizado…</option>`;
 
-  const def = state.weeks.length - 1; // la más reciente
+  let def = state.weeks.length - 1; // la más reciente por defecto
+  // Restaurar la semana recordada si todavía existe en los datos.
+  if (state.ui && state.ui.weekFrom) {
+    const idx = state.weeks.findIndex((w) => w.from === state.ui.weekFrom && w.to === state.ui.weekTo);
+    if (idx >= 0) def = idx;
+  }
   el.week.value = String(def);
   el.from.value = state.weeks[def].from;
   el.to.value = state.weeks[def].to;
@@ -230,32 +280,89 @@ function recompute() {
   if (!parsed.rows.length) return;
   state.R = compute(parsed, state.cfg, from, to);
   el.download.disabled = false;
-  el.copy.disabled = false;
-  el.banner.innerHTML = renderBanner(state.R);
-  el.stats.innerHTML = renderStats(state.R);
   renderPanel();
 }
 
 function selectTab(tab) {
   state.tab = tab;
-  document.querySelectorAll("nav.tabs button").forEach((b) =>
-    b.setAttribute("aria-selected", String(b.dataset.tab === tab))
-  );
+  highlightTab();
+  saveUi();
   renderPanel();
 }
 
 function renderPanel() {
   if (state.tab === "config") {
-    el.panel.innerHTML = renderConfig(state.cfg);
+    setPanel(renderConfig(state.cfg));
     return;
   }
   if (!state.R) {
-    el.panel.innerHTML = `<div class="empty">Carga archivos para ver el reporte.</div>`;
+    setPanel(`<div class="empty">Carga archivos para ver el reporte.</div>`);
     return;
   }
-  if (state.tab === "validacion") el.panel.innerHTML = renderValidation(state.R, state.filter);
-  else if (state.tab === "pm") el.panel.innerHTML = renderPM(state.R);
-  else if (state.tab === "incidencias") el.panel.innerHTML = renderIssues(state.R);
+  if (state.tab === "resumen") setPanel(renderOverview(state.R));
+  else if (state.tab === "validacion") setPanel(renderValidation(state.R, state.filter));
+  else if (state.tab === "pm") setPanel(renderPM(state.R));
+  else if (state.tab === "incidencias") setPanel(renderIssues(state.R));
+}
+
+// Pinta el panel con una transición suave de entrada.
+function setPanel(html) {
+  el.panel.innerHTML = html;
+  el.panel.classList.remove("fade");
+  void el.panel.offsetWidth;
+  el.panel.classList.add("fade");
+}
+
+// Ordena una tabla .sortable al hacer clic en un encabezado. Respeta los
+// grupos (tr.grp): ordena las filas dentro de cada grupo.
+function onSortClick(e) {
+  const th = e.target.closest("th");
+  if (!th || !th.closest("thead")) return;
+  const table = th.closest("table.sortable");
+  if (!table) return;
+
+  const ths = [...th.parentElement.children];
+  const col = ths.indexOf(th);
+  const dir = table.dataset.sortCol === String(col) && table.dataset.sortDir === "asc" ? "desc" : "asc";
+  table.dataset.sortCol = String(col);
+  table.dataset.sortDir = dir;
+  ths.forEach((h) => h.classList.remove("sort-asc", "sort-desc"));
+  th.classList.add(dir === "asc" ? "sort-asc" : "sort-desc");
+
+  const cellVal = (tr) => {
+    const c = tr.cells[col];
+    if (!c) return { t: "", n: null };
+    const t = c.textContent.trim();
+    const n = parseFloat(t.replace(/[^\d.\-]/g, ""));
+    return { t, n: Number.isNaN(n) ? null : n };
+  };
+  const cmp = (a, b) => {
+    const va = cellVal(a);
+    const vb = cellVal(b);
+    const r = va.n !== null && vb.n !== null ? va.n - vb.n : va.t.localeCompare(vb.t, "es");
+    return dir === "asc" ? r : -r;
+  };
+
+  const tbody = table.tBodies[0];
+  const segments = [];
+  let cur = null;
+  for (const tr of [...tbody.rows]) {
+    if (tr.classList.contains("grp")) {
+      cur = { head: tr, rows: [] };
+      segments.push(cur);
+    } else {
+      if (!cur) {
+        cur = { head: null, rows: [] };
+        segments.push(cur);
+      }
+      cur.rows.push(tr);
+    }
+  }
+  tbody.innerHTML = "";
+  for (const seg of segments) {
+    if (seg.head) tbody.appendChild(seg.head);
+    seg.rows.sort(cmp).forEach((tr) => tbody.appendChild(tr));
+  }
 }
 
 async function download() {
@@ -283,24 +390,6 @@ async function download() {
   }
 }
 
-async function copyForClient() {
-  if (!state.R) return;
-  const rows = buildConsolidadoRows(state.R, jobcodesForExcel(state.cfg.jobcodes));
-  const tsv = consolidadoToTSV(rows);
-  try {
-    await navigator.clipboard.writeText(tsv);
-    toast(`Copiadas ${rows.length} filas. Pégalas en la pestaña Week del cliente (columna B).`);
-  } catch {
-    const ta = document.createElement("textarea");
-    ta.value = tsv;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-    toast(`Copiadas ${rows.length} filas.`);
-  }
-}
-
 // ---------- Configuración ----------
 function onConfigInput(e) {
   const t = e.target;
@@ -316,6 +405,7 @@ function onConfigInput(e) {
       if (body) body.innerHTML = validationTable(state.R, filtered);
       if (count) count.textContent = `${filtered.length} de ${state.R.validation.length}`;
     }
+    saveUi();
     return;
   }
 
@@ -388,7 +478,6 @@ function recomputeKeepTab() {
   const parsed = mergedParsed();
   if (!parsed.rows.length) return;
   state.R = compute(parsed, state.cfg, from, to);
-  el.stats.innerHTML = renderStats(state.R);
 }
 
 function flashSaved() {

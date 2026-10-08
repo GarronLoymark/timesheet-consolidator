@@ -3,6 +3,7 @@
 
 import { fmtDay, isWeekend } from "../core/index.js";
 import { icon } from "./icons.js";
+import { barList, donut, chartCard } from "./charts.js";
 
 export function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -11,6 +12,16 @@ export function esc(s) {
 const f2 = (n) => Number(n).toFixed(2);
 const f4 = (n) => Number(n).toFixed(4);
 const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+
+/** Encabezado estándar de cada sección (título + subtítulo + zona derecha). */
+function pageHeader(ic, title, subtitle, right = "") {
+  return (
+    `<div class="pagehead"><div>` +
+    `<h2 class="pagetitle">${ic} ${esc(title)}</h2>` +
+    (subtitle ? `<p class="pagesub">${subtitle}</p>` : "") +
+    `</div>${right ? `<div class="pagehead-right">${right}</div>` : ""}</div>`
+  );
+}
 
 /** Semáforo de "¿lista para entregar?" con lo que falta por resolver. */
 export function renderBanner(R) {
@@ -105,7 +116,48 @@ export function validationTable(R, filtered) {
       body += `<tr><td>${esc(v.dev)}</td><td>${esc(v.tipo)}</td>${cells}<td class="n">${f2(v.total)}</td><td>${chip}</td></tr>`;
     }
   }
-  return `<div class="scroll"><table>${head}<tbody>${body}</tbody></table></div>`;
+  return `<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
+}
+
+/** Página Resumen: semáforo + KPIs + gráficos. */
+export function renderOverview(R) {
+  const ok = R.validation.filter((v) => v.tipo !== "On demand" && v.estado === "OK").length;
+  const fuera = R.validation.filter((v) => v.tipo === "Fijo" && v.estado !== "OK").length;
+  const od = R.validation.filter((v) => v.tipo === "On demand").length;
+
+  const estado = donut(
+    [
+      { label: "OK", value: ok, color: "#1e7b4a" },
+      { label: "Fuera de rango", value: fuera, color: "#a8381f" },
+      { label: "On demand", value: od, color: "#9aa5b1" },
+    ],
+    { centerValue: R.validation.length, centerLabel: "personas" }
+  );
+
+  const pmByTeam = {};
+  for (const p of R.pm) pmByTeam[p.equipo] = (pmByTeam[p.equipo] || 0) + p.horasPM;
+  const pmBars = barList(
+    Object.entries(pmByTeam).map(([label, value]) => ({ label, value })),
+    { unit: " h", decimals: 2 }
+  );
+
+  const hByTeam = {};
+  for (const d of R.dev) hByTeam[d.equipo] = (hByTeam[d.equipo] || 0) + d.hrs;
+  const hBars = barList(
+    Object.entries(hByTeam).map(([label, value]) => ({ label, value })),
+    { unit: " h", decimals: 0 }
+  );
+
+  return (
+    pageHeader(icon.trending(18), "Resumen", `Semana ${esc(R.label)} · ${R.dev.length} registros`) +
+    renderBanner(R) +
+    `<div class="stats">${renderStats(R)}</div>` +
+    `<div class="charts">` +
+    chartCard("Estado de los recursos", estado, icon.users(16)) +
+    chartCard("Horas PM por equipo", pmBars, icon.userClock(16)) +
+    chartCard("Horas registradas por equipo", hBars, icon.briefcase(16)) +
+    `</div>`
+  );
 }
 
 export function renderValidation(R, filter = {}) {
@@ -127,11 +179,42 @@ export function renderValidation(R, filter = {}) {
           .join(" · ")}.</p>`
       : "";
 
-  return `${nota}${toolbar}<div id="valBody">${validationTable(R, filtered)}</div>`;
+  const ok = R.validation.filter((v) => v.tipo !== "On demand" && v.estado === "OK").length;
+  const fuera = R.validation.filter((v) => v.tipo === "Fijo" && v.estado !== "OK").length;
+  const od = R.validation.filter((v) => v.tipo === "On demand").length;
+  const chips =
+    `<div class="sumchips">` +
+    `<span class="sumchip ok">${icon.check(14)} <b>${ok}</b> OK</span>` +
+    `<span class="sumchip ${fuera ? "bad" : ""}">${icon.alert(14)} <b>${fuera}</b> fuera de rango</span>` +
+    `<span class="sumchip">${icon.clock(14)} <b>${od}</b> on demand</span>` +
+    `</div>`;
+  const header = pageHeader(icon.check(18), "Validación de horas", `${R.validation.length} personas · semana ${esc(R.label)}`, chips);
+
+  return `${header}${nota}${toolbar}<div id="valBody">${validationTable(R, filtered)}</div>`;
 }
 
 export function renderPM(R) {
-  if (R.pm.length === 0) return `<div class="empty">Sin horas de PM en el rango.</div>`;
+  if (R.pm.length === 0) return `${pageHeader(icon.userClock(18), "Horas del PM", "")}<div class="empty">Sin horas de PM en el rango.</div>`;
+
+  // Resumen por equipo.
+  const byTeam = {};
+  for (const p of R.pm) {
+    const t = (byTeam[p.equipo] ||= { equipo: p.equipo, pm: p.pm, horas: 0, dias: 0, tareas: 0 });
+    t.horas += p.horasPM;
+    if (p.horasPM > 0) t.dias++;
+    t.tareas += p.tareas;
+  }
+  const totalPM = R.pm.reduce((s, p) => s + p.horasPM, 0);
+  const cards = Object.values(byTeam)
+    .map(
+      (t) =>
+        `<div class="teamcard"><h4>${icon.briefcase(14)} ${esc(t.equipo)}</h4>` +
+        `<div class="big">${f2(t.horas)}<small> h PM</small></div>` +
+        `<div class="meta">${esc(t.pm)} · ${t.dias} día(s) · ${t.tareas} tareas</div></div>`
+    )
+    .join("");
+  const header = pageHeader(icon.userClock(18), "Horas del PM", `${f2(totalPM)} h repartidas por equipo y día hábil`);
+
   const head =
     `<thead><tr><th>Equipo</th><th>Día</th><th>PM</th><th class="n">DEVs fijos</th><th class="n">Horas fijos</th>` +
     `<th class="n">Promedio</th><th class="n">Horas PM</th><th class="n">Tareas</th><th class="n">Por tarea</th></tr></thead>`;
@@ -142,45 +225,72 @@ export function renderPM(R) {
       `<td class="n">${p.devsFijos}</td><td class="n">${f2(p.horasFijos)}</td><td class="n">${f2(p.prom)}</td>` +
       `<td class="n"><b>${p.horasPM}</b></td><td class="n">${p.tareas}</td><td class="n">${p.tareas ? f4(p.porTarea) : "–"}</td></tr>`;
   }
-  return `<div class="scroll"><table>${head}<tbody>${body}</tbody></table></div>`;
+  return `${header}<div class="teamcards">${cards}</div><div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
 }
 
 export function renderIssues(R) {
-  if (R.issues.length === 0) return `<div class="empty">Sin incidencias.</div>`;
+  const header = pageHeader(
+    icon.alert(18),
+    "Incidencias de datos",
+    R.issues.length ? `${R.issues.length} incidencias para corregir en el origen` : "Sin problemas detectados"
+  );
+  if (R.issues.length === 0) return `${header}<div class="empty">Sin incidencias. Los datos están limpios.</div>`;
+
   const byType = {};
   for (const i of R.issues) {
     const t = i.tipo.replace(/"[^"]*"/g, '"…"').replace(/\d+/g, "N");
     (byType[t] ||= []).push(i);
   }
-  let out = "";
+  const isErr = (tipo) => /no existe|no está en Equipos|incompleta/i.test(tipo);
+  // Valor específico de cada fila (código, fila duplicada o nombre) para no repetir el tipo.
+  const specific = (tipo) => {
+    const q = /"([^"]+)"/.exec(tipo);
+    if (q) return q[1];
+    const f = /fila (\d+)/.exec(tipo);
+    if (f) return "fila " + f[1];
+    return "";
+  };
+  const cleanTitle = (t) =>
+    t.replace(/\s*"…"\s*/g, " ").replace(/^(.*?)(:|$).*/, (m, a) => a).replace(/\s+/g, " ").trim();
+
+  let rows = "";
   for (const t of Object.keys(byType)) {
     const list = byType[t];
-    out += `<h3 style="font-size:15px;color:var(--accent);margin:16px 0 4px">${esc(list[0].tipo.replace(/^(.*?)(:|$).*/, (m, a) => a))} <span style="color:var(--muted);font-weight:400">· ${list.length}</span></h3>`;
-    out += `<div class="scroll"><table><thead><tr><th>Archivo</th><th>Pestaña</th><th class="n">Fila</th><th>Detalle</th></tr></thead><tbody>`;
+    const err = isErr(t);
+    rows +=
+      `<tr class="grp inc"><td colspan="3">` +
+      `<span class="sev ${err ? "err" : "warn"}"></span>${esc(cleanTitle(t))}` +
+      `<span class="grp-count">${list.length}</span></td></tr>`;
     for (const i of list) {
       const m = /^"(.+)" no está en Equipos$/.exec(i.tipo);
       const action = m
         ? ` <button class="miniadd" data-add-person="${esc(m[1])}">+ Agregar al roster</button>`
         : "";
-      out += `<tr><td>${esc(i.file)}</td><td>${esc(i.tab)}</td><td class="n">${esc(i.row)}</td><td>${esc(i.tipo)}${i.detalle ? " — " + esc(i.detalle) : ""}${action}</td></tr>`;
+      const spec = specific(i.tipo);
+      const detail =
+        (spec ? `<b>${esc(spec)}</b>` : "") + (spec && i.detalle ? " · " : "") + (i.detalle ? esc(i.detalle) : "");
+      rows += `<tr><td>${i.tab ? esc(i.tab) : "—"}</td><td class="n">${esc(i.row)}</td><td>${detail || "—"}${action}</td></tr>`;
     }
-    out += `</tbody></table></div>`;
   }
-  return out;
+  return (
+    `${header}<div class="scroll"><table class="sortable">` +
+    `<thead><tr><th>Pestaña</th><th class="n">Fila</th><th>Detalle</th></tr></thead>` +
+    `<tbody>${rows}</tbody></table></div>`
+  );
 }
 
 export function renderConfig(cfg) {
   const p = cfg.params || {};
   const paramRows = [
-    ["minDia", "Horas mínimas por día (fijo)"],
-    ["maxDia", "Horas máximas por día (fijo)"],
-    ["umbral", "Umbral de promedio para jornada alta PM"],
+    ["minDia", "Horas mínimas por día"],
+    ["maxDia", "Horas máximas por día"],
+    ["umbral", "Umbral jornada alta PM"],
     ["pmNormal", "Horas PM jornada normal"],
     ["pmAlta", "Horas PM jornada alta"],
   ]
     .map(
       ([k, label]) =>
-        `<label class="f">${esc(label)}<input data-param="${k}" type="number" step="0.5" value="${esc(p[k])}" style="max-width:120px"></label>`
+        `<label class="field"><span>${esc(label)}</span><input data-param="${k}" type="number" step="0.5" value="${esc(p[k])}"></label>`
     )
     .join("");
 
@@ -205,7 +315,7 @@ export function renderConfig(cfg) {
   const aliases = (cfg.aliases || [])
     .map(
       (a, i) =>
-        `<tr><td><input data-a="${i}" data-k="de" value="${esc(a.de)}"></td><td><input data-a="${i}" data-k="a" value="${esc(a.a)}"></td></tr>`
+        `<tr><td><input data-a="${i}" data-k="de" value="${esc(a.de)}" placeholder="Como lo escriben"></td><td><input data-a="${i}" data-k="a" value="${esc(a.a)}" placeholder="Código correcto"></td></tr>`
     )
     .join("");
 
@@ -216,36 +326,53 @@ export function renderConfig(cfg) {
     )
     .join("");
 
-  return `<div class="cfg">
-    <p class="note">Esta configuración se guarda en tu navegador. Cada campo se aplica al recalcular.</p>
-    <div class="row" style="margin-bottom:12px">
-      <button id="cfgReset">Restaurar valores iniciales</button>
-      <span id="cfgState" class="saveState"></span>
+  const header = pageHeader(
+    icon.settings(18),
+    "Configuración",
+    "Se guarda en tu navegador y se aplica al recalcular.",
+    `<button id="cfgReset">Restaurar valores iniciales</button><span id="cfgState" class="saveState"></span>`
+  );
+
+  return `${header}<div class="cfg">
+    <div class="cfg-grid">
+      <div class="cfg-card">
+        <h3>${icon.settings(16)} Parámetros</h3>
+        <div class="field-grid">${paramRows}</div>
+      </div>
+      <div class="cfg-card">
+        <h3>${icon.search(16)} Palabras clave de reuniones</h3>
+        <p class="note">Una por línea. <code>·</code> representa un espacio (importan: <code>·pm·</code>).</p>
+        <textarea id="cfgKeywords" rows="7">${esc(kw)}</textarea>
+      </div>
     </div>
-    <h3>${icon.settings(16)} Parámetros</h3>
-    <div class="row">${paramRows}</div>
 
-    <h3>${icon.search(16)} Palabras clave de reuniones</h3>
-    <p class="note">Una por línea. Usa <code>·</code> para representar un espacio (los espacios importan: <code>·pm·</code>).</p>
-    <textarea id="cfgKeywords" rows="8" style="width:280px;font-family:monospace">${esc(kw)}</textarea>
+    <div class="cfg-card">
+      <h3>${icon.users(16)} Equipos (roster)</h3>
+      <div class="scroll"><table id="cfgRoster">
+        <thead><tr><th>DEV</th><th>Equipo</th><th>PM</th><th>Tipo</th><th>Cuenta PM</th></tr></thead>
+        <tbody>${roster}</tbody>
+      </table></div>
+      <button id="cfgAddPerson" class="addbtn">+ Agregar persona</button>
+    </div>
 
-    <h3>${icon.users(16)} Equipos (roster)</h3>
-    <div class="scroll"><table id="cfgRoster">
-      <tr><th>DEV</th><th>Equipo</th><th>PM</th><th>Tipo</th><th>Cuenta PM</th></tr>${roster}
-    </table></div>
-    <button id="cfgAddPerson" style="margin-top:8px">+ Agregar persona</button>
-
-    <h3>${icon.briefcase(16)} Alias de Job Codes</h3>
-    <div class="scroll"><table id="cfgAliases">
-      <tr><th>Como lo escriben</th><th>Código correcto</th></tr>${aliases}
-    </table></div>
-    <button id="cfgAddAlias" style="margin-top:8px">+ Agregar alias</button>
-
-    <h3>${icon.calendar(16)} Feriados</h3>
-    <p class="note">Los feriados no cuentan como día hábil: bajan el mínimo/máximo de horas y no generan horas de PM.</p>
-    <div class="scroll"><table id="cfgFeriados">
-      <tr><th>Fecha</th><th>Nombre</th></tr>${feriados}
-    </table></div>
-    <button id="cfgAddFeriado" style="margin-top:8px">+ Agregar feriado</button>
+    <div class="cfg-grid">
+      <div class="cfg-card">
+        <h3>${icon.briefcase(16)} Alias de Job Codes</h3>
+        <div class="scroll"><table id="cfgAliases">
+          <thead><tr><th>Como lo escriben</th><th>Código correcto</th></tr></thead>
+          <tbody>${aliases}</tbody>
+        </table></div>
+        <button id="cfgAddAlias" class="addbtn">+ Agregar alias</button>
+      </div>
+      <div class="cfg-card">
+        <h3>${icon.calendar(16)} Feriados</h3>
+        <p class="note">No cuentan como día hábil: bajan el mínimo/máximo y no generan horas de PM.</p>
+        <div class="scroll"><table id="cfgFeriados">
+          <thead><tr><th>Fecha</th><th>Nombre</th></tr></thead>
+          <tbody>${feriados}</tbody>
+        </table></div>
+        <button id="cfgAddFeriado" class="addbtn">+ Agregar feriado</button>
+      </div>
+    </div>
   </div>`;
 }
