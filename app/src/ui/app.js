@@ -58,7 +58,7 @@ const state = {
   histFilter: { dev: "", semana: "", dia: "" }, // filtros del histórico de incidencias
   options: { dedupe: false }, // opciones del reporte (ignorar duplicados)
   overrides: {}, // ajuste manual Sí/No por fila (key file|tab|row)
-  taskShowAll: false,
+  taskFilter: { res: "", dia: "" }, // filtros de Horas por recurso y fecha
   ui: {}, // preferencias recordadas (semana/filtros/pestaña)
 };
 
@@ -385,7 +385,7 @@ function renderPanel() {
   if (state.tab === "resumen") setPanel(renderOverview(state.R));
   else if (state.tab === "historico") setPanel(renderIncidentHistory(buildIncidentHistory(), state.histFilter));
   else if (state.tab === "validacion") setPanel(renderValidation(state.R, state.filter));
-  else if (state.tab === "tareas") setPanel(renderTasks(state.R, { showAll: state.taskShowAll }));
+  else if (state.tab === "tareas") setPanel(renderTasks(state.R, state.taskFilter));
   else if (state.tab === "incidencias") setPanel(renderIssues(state.R));
 }
 
@@ -486,9 +486,10 @@ function onConfigInput(e) {
     recompute();
     return;
   }
-  if (t.id === "taskAll") {
-    state.taskShowAll = t.checked;
-    if (state.R) setPanel(renderTasks(state.R, { showAll: state.taskShowAll }));
+  if (t.id === "taskRes" || t.id === "taskDia") {
+    if (t.id === "taskRes") state.taskFilter.res = t.value;
+    else state.taskFilter.dia = t.value;
+    if (state.R) setPanel(renderTasks(state.R, state.taskFilter));
     return;
   }
 
@@ -546,6 +547,11 @@ function onConfigClick(e) {
   if (t.id === "histClear") {
     state.histFilter = { dev: "", semana: "", dia: "" };
     setPanel(renderIncidentHistory(buildIncidentHistory(), state.histFilter));
+    return;
+  }
+  if (t.id === "taskClear") {
+    state.taskFilter = { res: "", dia: "" };
+    if (state.R) setPanel(renderTasks(state.R, state.taskFilter));
     return;
   }
   const add = t.closest && t.closest("[data-add-person]");

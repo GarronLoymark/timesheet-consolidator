@@ -221,33 +221,33 @@ export function renderValidation(R, filter = {}) {
   return `${header}${nota}${toolbar}<div id="valBody">${validationTable(R, filtered)}</div>`;
 }
 
-export function renderTasks(R, opts = {}) {
-  const showAll = !!opts.showAll;
-  const isMeeting = (d) => {
-    const c = d.client.toUpperCase();
-    return c === "RKD MTG" || c === "RKD MTGINT";
-  };
-  const rows = R.dev.filter((d) => showAll || isMeeting(d));
+export function renderTasks(R, filter = {}) {
   const header = pageHeader(
     icon.tasks(18),
-    "Tareas y ajuste manual",
-    "Marca Sí/No para forzar si una tarea cuenta para el PM. Se recalcula al instante."
+    "Horas por recurso y fecha",
+    "Detalle tipo Excel de las horas por DEV. Ajusta Sí/No si una tarea cuenta para el PM."
   );
+  if (R.dev.length === 0) return `${header}<div class="empty">Sin registros en el rango.</div>`;
+
+  const f = { res: filter.res || "", dia: filter.dia || "" };
+  const resources = [...new Set(R.dev.map((d) => d.res))].sort();
+  const rows = R.dev.filter((d) => (!f.res || d.res === f.res) && (!f.dia || d.date === f.dia));
+
+  const opt = (val, sel, label) => `<option value="${esc(val)}" ${val === sel ? "selected" : ""}>${esc(label ?? val)}</option>`;
   const toolbar =
     `<div class="toolbar">` +
-    `<label class="toggle"><input id="taskAll" type="checkbox" ${showAll ? "checked" : ""}> Mostrar todas las tareas</label>` +
-    `<span class="count">${rows.length} tareas${showAll ? "" : " (solo reuniones RKD)"}</span>` +
+    `<label class="f">Recurso<select id="taskRes"><option value="">Todos</option>${resources.map((r) => opt(r, f.res)).join("")}</select></label>` +
+    `<label class="f">Día<select id="taskDia"><option value="">Todos</option>${R.days.map((d) => opt(d, f.dia, fmtDay(d))).join("")}</select></label>` +
+    (f.res || f.dia ? `<button class="miniadd" id="taskClear">Limpiar filtros</button>` : "") +
+    `<span class="count">${rows.length} de ${R.dev.length}</span>` +
     `</div>`;
 
-  if (rows.length === 0)
-    return `${header}${toolbar}<div class="empty">No hay reuniones RKD en el rango. Activa "Mostrar todas las tareas".</div>`;
-
   const head =
-    `<thead><tr><th>Recurso</th><th>Día</th><th>Job Code</th><th>Tarea</th><th>Auto</th><th>Ajuste</th></tr></thead>`;
+    `<thead><tr><th>Recurso</th><th>Fecha</th><th>Job Code</th><th>Tarea</th><th>Comentario</th>` +
+    `<th>Tipo</th><th class="n">Horas</th><th>Auto</th><th>Ajuste PM</th></tr></thead>`;
   let body = "";
   for (const d of rows) {
-    const autoChip =
-      d.auto === "Sí" ? `<span class="chip ok">Sí</span>` : `<span class="chip od">No</span>`;
+    const autoChip = d.auto === "Sí" ? `<span class="chip ok">Sí</span>` : `<span class="chip od">No</span>`;
     const sel =
       `<select class="ovr" data-ovr-key="${esc(d.key)}">` +
       `<option value="" ${d.override === "" ? "selected" : ""}>Auto</option>` +
@@ -257,9 +257,11 @@ export function renderTasks(R, opts = {}) {
     const changed = d.override ? ' class="ovr-row"' : "";
     body +=
       `<tr${changed}><td>${esc(d.res)}</td><td>${esc(fmtDay(d.date))}</td><td>${esc(d.client)}</td>` +
-      `<td>${esc(d.task.slice(0, 70))}</td><td>${autoChip}</td><td>${sel}</td></tr>`;
+      `<td>${esc(d.task.slice(0, 80))}</td><td>${esc((d.comm || "").slice(0, 40))}</td><td>${esc(d.typ || "")}</td>` +
+      `<td class="n">${f2(d.hrs)}</td><td>${autoChip}</td><td>${sel}</td></tr>`;
   }
-  return `${header}${toolbar}<div class="scroll"><table>${head}<tbody>${body}</tbody></table></div>`;
+  if (!rows.length) body = `<tr><td colspan="9"><div class="empty">Sin resultados para el filtro.</div></td></tr>`;
+  return `${header}${toolbar}<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
 }
 
 export function renderIssues(R) {
