@@ -86,7 +86,7 @@ async function main() {
     it("filas DEV incluidas = 405", () => expect(R.dev.length).toBe(405));
     it("filas DEV auto 'Sí' = 375", () => expect(R.dev.filter((d) => d.auto === "Sí").length).toBe(375));
     it("personas en Validación = 22", () => expect(R.validation.length).toBe(22));
-    it("incidencias = 24", () => expect(R.issues.length).toBe(24));
+    it("incidencias = 31", () => expect(R.issues.length).toBe(31));
     it("horas PM totales = 66", () => expect(sumPM(R)).toBe(66));
   });
 
@@ -200,7 +200,7 @@ async function main() {
       const v = Rd.validation.find((x) => x.dev === "Standard Dev 3");
       expect(v.perDay["2026-10-01"]).toBeCloseTo(8, 2);
     });
-    it("con dedupe hay 7 filas DEV menos (los 7 duplicados)", () => expect(Rd.dev.length).toBe(R.dev.length - 7));
+    it("con dedupe hay 14 filas DEV menos (los 14 duplicados)", () => expect(Rd.dev.length).toBe(R.dev.length - 14));
   });
 
   render(out);
