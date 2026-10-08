@@ -17,7 +17,6 @@ import {
   renderValidation,
   filterValidation,
   validationTable,
-  renderPM,
   renderTasks,
   renderIssues,
   renderConfig,
@@ -98,6 +97,7 @@ async function init() {
     state.ui = ui;
     state.overrides = loadOverrides();
     if (ui.tab) state.tab = ui.tab;
+    if (state.tab === "pm") state.tab = "validacion"; // Horas PM se fusionó en Validación
     if (ui.filter) state.filter = { q: ui.filter.q || "", soloProblemas: !!ui.filter.soloProblemas };
     if (ui.options) state.options = { dedupe: !!ui.options.dedupe };
     highlightTab();
@@ -380,7 +380,6 @@ function renderPanel() {
   if (state.tab === "resumen") setPanel(renderOverview(state.R));
   else if (state.tab === "tendencia") setPanel(renderTrend(buildWeekSummaries()));
   else if (state.tab === "validacion") setPanel(renderValidation(state.R, state.filter));
-  else if (state.tab === "pm") setPanel(renderPM(state.R));
   else if (state.tab === "tareas") setPanel(renderTasks(state.R, { showAll: state.taskShowAll }));
   else if (state.tab === "incidencias") setPanel(renderIssues(state.R));
 }

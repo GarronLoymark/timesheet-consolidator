@@ -255,6 +255,9 @@ td.wk { background: var(--wk) !important; color: var(--muted); }
 .pagetitle .ic { color: var(--accent); }
 .pagesub { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
 .pagehead-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.subsec { font-size: 15px; font-weight: 700; margin: 26px 0 14px; display: flex; align-items: center; gap: 8px; padding-top: 18px; border-top: 1px solid var(--line); }
+.subsec .ic { color: var(--accent); }
+.subsec-meta { font-weight: 500; font-size: 13px; color: var(--muted); }
 
 .sumchips { display: flex; gap: 8px; flex-wrap: wrap; }
 .sumchip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--wk); border: 1px solid var(--line); }

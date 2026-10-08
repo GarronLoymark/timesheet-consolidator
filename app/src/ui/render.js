@@ -229,7 +229,7 @@ export function renderValidation(R, filter = {}) {
     `</div>`;
   const header = pageHeader(icon.check(18), "Validación de horas", `${R.validation.length} personas · semana ${esc(R.label)}`, chips);
 
-  return `${header}${nota}${toolbar}<div id="valBody">${validationTable(R, filtered)}</div>`;
+  return `${header}${nota}${toolbar}<div id="valBody">${validationTable(R, filtered)}</div>${renderPM(R)}`;
 }
 
 export function renderPM(R) {
@@ -252,7 +252,7 @@ export function renderPM(R) {
         `<div class="meta">${esc(t.pm)} · ${t.dias} día(s) · ${t.tareas} tareas</div></div>`
     )
     .join("");
-  const header = pageHeader(icon.userClock(18), "Horas del PM", `${f2(totalPM)} h repartidas por equipo y día hábil`);
+  const header = `<h3 class="subsec">${icon.userClock(16)} Horas del PM <span class="subsec-meta">· ${f2(totalPM)} h por equipo y día hábil</span></h3>`;
 
   const head =
     `<thead><tr><th>Equipo</th><th>Día</th><th>PM</th><th class="n">DEVs fijos</th><th class="n">Horas fijos</th>` +
