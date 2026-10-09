@@ -279,12 +279,31 @@ export function renderTasks(R, filter = {}, pag = {}) {
     `<thead><tr><th>Job Code</th><th>Tarea</th><th>Comentario</th><th>Tipo</th>` +
     `<th>Fecha</th><th>Recurso</th><th class="n">Horas</th></tr></thead>`;
   let body = "";
+  // Subtotal al final de cada día de cada persona (según lo que se muestra en la página).
+  let gKey = null;
+  let gSum = 0;
+  let gRes = "";
+  let gDate = "";
+  const flush = () => {
+    if (gKey !== null)
+      body += `<tr class="subtot"><td colspan="6">Total · ${esc(gRes)} · ${esc(fmtDay(gDate))}</td><td class="n">${f2(gSum)}</td></tr>`;
+  };
   for (const d of pageRows) {
+    const key = d.res + "|" + d.date;
+    if (key !== gKey) {
+      flush();
+      gKey = key;
+      gSum = 0;
+      gRes = d.res;
+      gDate = d.date;
+    }
     body +=
       `<tr><td>${esc(d.client)}</td><td>${esc(d.task.slice(0, 80))}</td>` +
       `<td>${esc((d.comm || "").slice(0, 40))}</td><td>${esc(d.typ || "")}</td>` +
       `<td>${esc(fmtDay(d.date))}</td><td>${esc(d.res)}</td><td class="n">${f2(d.hrs)}</td></tr>`;
+    gSum += d.hrs || 0;
   }
+  flush();
   if (!rows.length) body = `<tr><td colspan="7"><div class="empty">Sin resultados para el filtro.</div></td></tr>`;
 
   const from = rows.length ? start + 1 : 0;
@@ -296,7 +315,7 @@ export function renderTasks(R, filter = {}, pag = {}) {
     `<button class="miniadd" id="taskNext" ${n >= pages ? "disabled" : ""}>Siguiente ›</button>` +
     `</div>`;
 
-  return `${header}${toolbar}<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>${pager}`;
+  return `${header}${toolbar}<div class="scroll"><table>${head}<tbody>${body}</tbody></table></div>${pager}`;
 }
 
 export function renderIssues(R) {

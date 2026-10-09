@@ -209,6 +209,8 @@ th {
 tbody tr:nth-child(even) td { background: var(--zebra); }
 tbody tr:hover td { background: var(--accent-soft); }
 tbody tr.pmrow td { background: var(--wk); font-weight: 600; }
+tbody tr.subtot td { background: var(--wk); font-weight: 700; color: var(--muted); border-top: 1px solid var(--line-strong); }
+tbody tr.subtot td:last-child { color: var(--ink); }
 table.sortable thead th { cursor: pointer; user-select: none; }
 table.sortable thead th:hover { color: var(--accent); }
 th.sort-asc::after { content: " ↑"; color: var(--accent); font-weight: 700; }
