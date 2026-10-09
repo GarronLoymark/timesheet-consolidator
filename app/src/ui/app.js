@@ -54,7 +54,8 @@ const state = {
   weeks: [],
   R: null,
   tab: "resumen",
-  filter: { q: "", soloProblemas: false },
+  filter: { q: "", soloProblemas: false, equipo: "", tipo: "" },
+  valPage: { size: 15, n: 1 }, // paginación de la tabla de Validación
   histFilter: { dev: "", semana: "", dia: "" }, // filtros del histórico de incidencias
   options: { dedupe: false }, // opciones del reporte (ignorar duplicados)
   overrides: {}, // ajuste manual Sí/No por fila (key file|tab|row)
@@ -397,7 +398,7 @@ function renderPanel() {
   }
   if (state.tab === "resumen") setPanel(renderOverview(state.R));
   else if (state.tab === "historico") setPanel(renderIncidentHistory(buildIncidentHistory(), state.histFilter));
-  else if (state.tab === "validacion") setPanel(renderValidation(state.R, state.filter));
+  else if (state.tab === "validacion") setPanel(renderValidation(state.R, state.filter, state.valPage));
   else if (state.tab === "tareas") setPanel(renderTasks(state.R, state.taskFilter, state.taskPage));
   else if (state.tab === "incidencias") setPanel(renderIssues(state.R));
 }
@@ -407,6 +408,17 @@ function setPanel(html) {  el.panel.innerHTML = html;
   el.panel.classList.remove("fade");
   void el.panel.offsetWidth;
   el.panel.classList.add("fade");
+}
+
+// Actualiza solo el cuerpo de la tabla de Validación (tabla + pager) para no
+// perder el foco del buscador ni re-renderizar el toolbar completo.
+function refreshValBody() {
+  if (!state.R) return;
+  const filtered = filterValidation(state.R, state.filter);
+  const body = document.getElementById("valBody");
+  const count = document.getElementById("valCount");
+  if (body) body.innerHTML = validationTable(state.R, filtered, state.valPage);
+  if (count) count.textContent = `${filtered.length} de ${state.R.validation.length}`;
 }
 
 // Ordena una tabla .sortable al hacer clic en un encabezado. Respeta los
@@ -505,17 +517,20 @@ function onConfigInput(e) {
   }
 
   // Filtro de la tabla de Validación: actualiza solo el cuerpo para no perder el foco.
-  if (t.id === "valSearch" || t.id === "valSolo") {
+  if (t.id === "valSearch" || t.id === "valSolo" || t.id === "valEquipo" || t.id === "valTipo") {
     if (t.id === "valSearch") state.filter.q = t.value;
-    else state.filter.soloProblemas = t.checked;
-    if (state.R) {
-      const filtered = filterValidation(state.R, state.filter);
-      const body = document.getElementById("valBody");
-      const count = document.getElementById("valCount");
-      if (body) body.innerHTML = validationTable(state.R, filtered);
-      if (count) count.textContent = `${filtered.length} de ${state.R.validation.length}`;
-    }
+    else if (t.id === "valSolo") state.filter.soloProblemas = t.checked;
+    else if (t.id === "valEquipo") state.filter.equipo = t.value;
+    else state.filter.tipo = t.value;
+    state.valPage.n = 1; // al filtrar, vuelve a la primera página
+    refreshValBody();
     saveUi();
+    return;
+  }
+  if (t.id === "valSize") {
+    state.valPage.size = Number(t.value);
+    state.valPage.n = 1;
+    refreshValBody();
     return;
   }
 
@@ -569,6 +584,18 @@ function onConfigClick(e) {
   if (t.id === "taskPrev" || t.id === "taskNext") {
     state.taskPage.n = Math.max(1, state.taskPage.n + (t.id === "taskNext" ? 1 : -1));
     if (state.R) setPanel(renderTasks(state.R, state.taskFilter, state.taskPage));
+    return;
+  }
+  if (t.id === "valPrev" || t.id === "valNext") {
+    state.valPage.n = Math.max(1, state.valPage.n + (t.id === "valNext" ? 1 : -1));
+    refreshValBody();
+    return;
+  }
+  if (t.id === "valClear") {
+    state.filter = { q: "", soloProblemas: false, equipo: "", tipo: "" };
+    state.valPage.n = 1;
+    if (state.R) setPanel(renderValidation(state.R, state.filter, state.valPage));
+    saveUi();
     return;
   }
   // Corregir typo de Job Code: crea un alias desconocido -> sugerido.

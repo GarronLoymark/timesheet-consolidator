@@ -45,24 +45,6 @@ function pageHeader(ic, title, subtitle, right = "") {
   );
 }
 
-/** Semáforo de "¿lista para entregar?" con lo que falta por resolver. */
-export function renderBanner(R) {
-  const fijosFuera = R.validation.filter((v) => v.tipo === "Fijo" && v.estado !== "OK").length;
-  const sinRoster = R.issues.filter((i) => / no está en Equipos$/.test(i.tipo)).length;
-  const jobCodes = R.issues.filter((i) => /^Job Code .* no existe/.test(i.tipo)).length;
-  const bloqueos = fijosFuera + sinRoster;
-
-  if (bloqueos === 0) {
-    const extra = jobCodes ? ` Revisa ${jobCodes} Job Code(s) desconocido(s) antes de entregar.` : "";
-    return `<div class="banner ok" role="status">${icon.check()}<div><strong>Lista para entregar.</strong> Ningún recurso fijo fuera de rango.${extra}</div></div>`;
-  }
-  const partes = [];
-  if (fijosFuera) partes.push(`${fijosFuera} recurso(s) fijo(s) fuera de rango`);
-  if (sinRoster) partes.push(`${sinRoster} persona(s) sin equipo`);
-  if (jobCodes) partes.push(`${jobCodes} Job Code(s) desconocido(s)`);
-  return `<div class="banner" role="alert">${icon.alert()}<div><strong>Falta revisar:</strong> ${partes.join(" · ")}.</div></div>`;
-}
-
 export function renderStats(R) {
   const fijosFuera = R.validation.filter((v) => v.tipo === "Fijo" && v.estado !== "OK").length;
   const onDemandHoras = R.validation.filter((v) => v.tipo === "On demand").reduce((s, v) => s + v.total, 0);
@@ -86,19 +68,36 @@ export function renderStats(R) {
 export function filterValidation(R, filter = {}) {
   const q = (filter.q || "").trim().toLowerCase();
   const solo = !!filter.soloProblemas;
+  const equipo = filter.equipo || "";
+  const tipo = filter.tipo || "";
   return R.validation.filter((v) => {
     if (solo && !(v.tipo === "Fijo" && v.estado !== "OK")) return false;
+    if (equipo && v.equipo !== equipo) return false;
+    if (tipo && v.tipo !== tipo) return false;
     if (q && !(v.dev.toLowerCase().includes(q) || v.equipo.toLowerCase().includes(q))) return false;
     return true;
   });
 }
 
 /** Tabla de validación (solo el cuerpo filtrable, sin el toolbar). */
-export function validationTable(R, filtered) {
+export function validationTable(R, filtered, pag = {}) {
   if (filtered.length === 0) return `<div class="empty">Sin resultados para el filtro.</div>`;
   const days = R.days;
   const holidays = new Set(R.holidays || []);
   const names = R.holidayNames || {};
+
+  // Paginación sobre las personas filtradas (los encabezados de equipo y la
+  // fila del PM se recalculan según las filas visibles de cada página).
+  const sizes = [15, 25, 50, 100];
+  const size = sizes.includes(pag.size) ? pag.size : 15;
+  const pages = Math.max(1, Math.ceil(filtered.length / size));
+  const n = Math.min(Math.max(1, pag.n || 1), pages);
+  const start = (n - 1) * size;
+  const pageRows = filtered.slice(start, start + size);
+  // Índice de la última persona de cada equipo en la lista filtrada: solo ahí
+  // se muestra la fila del PM (evita repetir su total si el equipo se parte).
+  const lastIdxByTeam = {};
+  filtered.forEach((v, i) => (lastIdxByTeam[v.equipo] = i));
 
   const head =
     `<thead><tr><th>Recurso</th><th>Tipo</th>` +
@@ -113,7 +112,7 @@ export function validationTable(R, filtered) {
     `<th class="n">Total</th><th>Estado</th></tr></thead>`;
 
   const rowsByTeam = {};
-  for (const v of filtered) (rowsByTeam[v.equipo] ||= []).push(v);
+  for (const v of pageRows) (rowsByTeam[v.equipo] ||= []).push(v);
 
   // Horas del PM por equipo y día (se muestran como una fila más del equipo).
   const pmByTeam = {};
@@ -156,8 +155,10 @@ export function validationTable(R, filtered) {
       body += `<tr><td>${esc(v.dev)}</td><td>${esc(v.tipo)}</td>${cells}<td class="n">${f2(v.total)}</td><td>${chip}${detalle}</td></tr>`;
     }
     // Fila del PM del equipo, con sus horas asignadas por día.
+    // Solo si la última persona de este equipo aparece en la página actual.
+    const li = lastIdxByTeam[team];
     const pm = pmByTeam[team];
-    if (pm) {
+    if (pm && li >= start && li < start + size) {
       const cells = days
         .map((d) => {
           const shaded = isWeekend(d) || holidays.has(d);
@@ -168,10 +169,21 @@ export function validationTable(R, filtered) {
       body += `<tr class="pmrow"><td>${esc(pm.pm)}</td><td>PM</td>${cells}<td class="n">${f2(pm.total)}</td><td><span class="chip od">PM</span></td></tr>`;
     }
   }
-  return `<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
+
+  const tbl = `<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
+  if (pages <= 1) return tbl;
+  const from = start + 1;
+  const to = Math.min(start + size, filtered.length);
+  const pager =
+    `<div class="pager">` +
+    `<button class="miniadd" id="valPrev" ${n <= 1 ? "disabled" : ""}>‹ Anterior</button>` +
+    `<span class="pageinfo">${from}–${to} de ${filtered.length} · página ${n} de ${pages}</span>` +
+    `<button class="miniadd" id="valNext" ${n >= pages ? "disabled" : ""}>Siguiente ›</button>` +
+    `</div>`;
+  return `${tbl}${pager}`;
 }
 
-/** Página Resumen: semáforo + KPIs + gráficos. */
+/** Página Resumen: KPIs + gráficos. */
 export function renderOverview(R) {
   const ok = R.validation.filter((v) => v.tipo !== "On demand" && v.estado === "OK").length;
   const fuera = R.validation.filter((v) => v.tipo === "Fijo" && v.estado !== "OK").length;
@@ -218,7 +230,6 @@ export function renderOverview(R) {
 
   return (
     pageHeader(icon.trending(18), "Resumen", `Semana ${esc(R.label)} · ${R.dev.length} registros`) +
-    renderBanner(R) +
     `<div class="stats">${renderStats(R)}</div>` +
     `<div class="charts">` +
     chartCard("Estado de los recursos", estado, icon.users(16)) +
@@ -233,15 +244,23 @@ export function renderOverview(R) {
   );
 }
 
-export function renderValidation(R, filter = {}) {
+export function renderValidation(R, filter = {}, pag = {}) {
   if (R.validation.length === 0) return `<div class="empty">Sin personas en el rango.</div>`;
   const names = R.holidayNames || {};
   const filtered = filterValidation(R, filter);
 
+  const teams = [...new Set(R.validation.map((v) => v.equipo))].sort();
+  const sizes = [15, 25, 50, 100];
+  const size = sizes.includes(pag.size) ? pag.size : 15;
+  const opt = (val, sel, label) => `<option value="${esc(val)}" ${val === String(sel) || val === sel ? "selected" : ""}>${esc(label ?? val)}</option>`;
   const toolbar =
     `<div class="toolbar">` +
     `<div class="searchbox">${icon.search()}<input id="valSearch" type="search" placeholder="Buscar persona o equipo" value="${esc(filter.q || "")}"></div>` +
+    `<label class="f">Equipo<select id="valEquipo"><option value="">Todos</option>${teams.map((t) => opt(t, filter.equipo || "")).join("")}</select></label>` +
+    `<label class="f">Tipo<select id="valTipo"><option value="">Todos</option>${["Fijo", "On demand"].map((t) => opt(t, filter.tipo || "")).join("")}</select></label>` +
+    `<label class="f">Por página<select id="valSize">${sizes.map((s) => opt(String(s), String(size), s)).join("")}</select></label>` +
     `<label class="toggle"><input id="valSolo" type="checkbox" ${filter.soloProblemas ? "checked" : ""}> Solo fuera de rango</label>` +
+    `<button class="miniadd" id="valClear">Limpiar filtros</button>` +
     `<span class="count" id="valCount">${filtered.length} de ${R.validation.length}</span>` +
     `</div>`;
 
@@ -263,7 +282,7 @@ export function renderValidation(R, filter = {}) {
     `</div>`;
   const header = pageHeader(icon.check(18), "Validación de horas", `${R.validation.length} personas · semana ${esc(R.label)}`, chips);
 
-  return `${header}${nota}${toolbar}<div id="valBody">${validationTable(R, filtered)}</div>`;
+  return `${header}${nota}${toolbar}<div id="valBody">${validationTable(R, filtered, pag)}</div>`;
 }
 
 export function renderTasks(R, filter = {}, pag = {}) {
