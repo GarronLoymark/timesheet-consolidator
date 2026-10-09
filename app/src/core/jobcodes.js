@@ -40,20 +40,45 @@ function levenshtein(a, b) {
 }
 
 /**
+ * Extrae el código que suele venir al inicio del Task Name
+ * ("FBNYC - TTT - …" o "MFNMS: Molly's…" -> "FBNYC"/"MFNMS").
+ * @param {string} task
+ * @returns {string}  Código en MAYÚSCULAS, o "" si no hay uno reconocible.
+ */
+export function codeFromTask(task) {
+  const t = clean(task);
+  if (!t) return "";
+  const m = /^([A-Za-z]{2,8})\b/.exec(t);
+  return m ? m[1].toUpperCase() : "";
+}
+
+/**
  * Sugiere el Job Code conocido más cercano a un código desconocido (posible typo).
+ * Si el Task Name empieza con un código conocido parecido al Client, se prioriza
+ * ese (misma tarea, Client mal escrito).
  * @param {string} code  Código desconocido (se compara en MAYÚSCULAS)
  * @param {Iterable<string>} known  Códigos conocidos en MAYÚSCULAS
+ * @param {string} [task]  Task Name (respaldo para confirmar el typo)
  * @returns {string}  Mejor coincidencia, o "" si ninguna es lo bastante cercana
  */
-export function closestJobCode(code, known) {
+export function closestJobCode(code, known, task) {
   const up = String(code || "").toUpperCase().trim();
   if (up.length < 3) return "";
+  const knownSet = known instanceof Set ? known : new Set(known);
+  if (knownSet.has(up)) return ""; // ya es conocido
   // Umbral según largo: códigos cortos toleran 1 cambio, largos hasta 2.
   const maxDist = up.length <= 5 ? 1 : 2;
+
+  // 1) El Task empieza con un código conocido parecido al Client: alta confianza.
+  const fromTask = codeFromTask(task);
+  if (fromTask && fromTask !== up && knownSet.has(fromTask) && levenshtein(up, fromTask) <= maxDist) {
+    return fromTask;
+  }
+
+  // 2) Comparación de Levenshtein contra todos los códigos conocidos.
   let best = "";
   let bestDist = Infinity;
-  for (const k of known) {
-    if (k === up) return ""; // ya es conocido
+  for (const k of knownSet) {
     const d = levenshtein(up, k);
     if (d < bestDist) {
       bestDist = d;

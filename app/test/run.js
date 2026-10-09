@@ -62,6 +62,10 @@ async function main() {
     it("código ya conocido no sugiere nada", () => expect(closestJobCode("BFF", known)).toBe(""));
     it("demasiado corto no sugiere", () => expect(closestJobCode("AB", known)).toBe(""));
     it("sin parecido no sugiere", () => expect(closestJobCode("ZZZZZZ", known)).toBe(""));
+    it("usa el código al inicio del Task para corregir el Client", () =>
+      expect(closestJobCode("MFNM", known, "MFNMS: Molly's Mobile Market - Email 2A")).toBe("MFNMS"));
+    it("ignora el Task si su código no se parece al Client", () =>
+      expect(closestJobCode("XQWPL", known, "BFF: eNews - 10/19 @ 10am")).toBe(""));
   });
 
   describe("Caso 6 · ¿Cuenta para el PM?", () => {

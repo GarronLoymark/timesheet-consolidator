@@ -107,7 +107,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
         tipo: `Job Code "${client}" no existe en JobCodes`,
         detalle: r.task.slice(0, 90),
         jobCode: client,
-        sugerencia: closestJobCode(client, known),
+        sugerencia: closestJobCode(client, known, r.task),
       });
     }
     if (isWeekend(r.date) && tipo !== "On demand") {
