@@ -133,7 +133,9 @@ export function validationTable(R, filtered) {
           const shaded = isWeekend(d) || holidays.has(d);
           const redDay = v.tipo === "Fijo" && !shaded && (round2(h) < R.params.minDia || round2(h) > R.params.maxDia);
           const cls = redDay ? "n bad" : shaded ? "n wk" : "n";
-          return `<td class="${cls}">${h ? f2(h) : shaded ? "" : "0"}</td>`;
+          // On demand sin horas: en blanco (no se les exige mínimo por día).
+          const empty = shaded || v.tipo === "On demand";
+          return `<td class="${cls}">${h ? f2(h) : empty ? "" : "0"}</td>`;
         })
         .join("");
       const chip =
