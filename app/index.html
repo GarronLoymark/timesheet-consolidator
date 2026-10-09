@@ -25,14 +25,13 @@
           <button class="navitem" role="tab" data-tab="validacion"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Validación</button>
           <button class="navitem" role="tab" data-tab="tareas"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M8.5 12l1.5 1.5 3-3"/><path d="M8.5 17l1.5 1.5 3-3"/></svg>Tareas</button>
           <button class="navitem" role="tab" data-tab="historico"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M8 16l3-4 3 2 4-6"/><circle cx="8" cy="16" r="1"/><circle cx="11" cy="12" r="1"/><circle cx="14" cy="14" r="1"/><circle cx="18" cy="8" r="1"/></svg>Histórico de incidencias</button>
-          <button class="navitem" role="tab" data-tab="incidencias"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.5v.5"/></svg>Incidencias</button>
           <button class="navitem" role="tab" data-tab="config"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.3-2.5H9.4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.3 2.5h4.2l.3-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5a7 7 0 0 0 .1-1z"/></svg>Configuración</button>
         </nav>
         <script>
           // Marca la pestaña recordada antes de pintar, para que el activo no salte.
           try {
             var _t = (JSON.parse(localStorage.getItem("ts.ui.v1") || "{}").tab) || "resumen";
-            if (_t === "tendencia") _t = "historico";
+            if (_t === "tendencia" || _t === "incidencias") _t = "historico";
             if (_t === "pm") _t = "validacion";
             document.querySelectorAll("#nav .navitem").forEach(function (b) {
               if (b.dataset.tab === _t) b.setAttribute("aria-current", "page");
@@ -92,7 +91,7 @@
               <p class="onboard-lead">Todo ocurre en tu navegador. Ningún archivo se sube a un servidor.</p>
               <ol class="steps">
                 <li><span class="step-n">1</span><div><strong>Sube los exports</strong><p>Arrastra los <code>.xlsx</code> del timesheet de tus equipos.</p></div></li>
-                <li><span class="step-n">2</span><div><strong>Revisa la semana</strong><p>Validación, Horas PM e Incidencias, con alertas claras.</p></div></li>
+                <li><span class="step-n">2</span><div><strong>Revisa la semana</strong><p>Validación, Horas PM e Histórico de incidencias, con alertas claras.</p></div></li>
                 <li><span class="step-n">3</span><div><strong>Descarga el Excel</strong><p>Listo para entregar, con fórmulas que se recalculan.</p></div></li>
               </ol>
               <button class="primary" id="onboardBtn">Cargar archivos</button>

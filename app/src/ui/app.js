@@ -18,7 +18,6 @@ import {
   filterValidation,
   validationTable,
   renderTasks,
-  renderIssues,
   renderConfig,
 } from "./render.js";
 import { HOLIDAYS_2026 } from "../data/holidays.js";
@@ -98,8 +97,14 @@ async function init() {
     state.overrides = loadOverrides();
     if (ui.tab) state.tab = ui.tab;
     if (state.tab === "pm") state.tab = "validacion"; // Horas PM se fusionó en Validación
-    if (state.tab === "tendencia") state.tab = "historico"; // Tendencia es ahora el histórico de incidencias
-    if (ui.filter) state.filter = { q: ui.filter.q || "", soloProblemas: !!ui.filter.soloProblemas };
+  if (state.tab === "tendencia" || state.tab === "incidencias") state.tab = "historico"; // ahora todo vive en el histórico
+    if (ui.filter)
+      state.filter = {
+        q: ui.filter.q || "",
+        soloProblemas: !!ui.filter.soloProblemas,
+        equipo: ui.filter.equipo || "",
+        tipo: ui.filter.tipo || "",
+      };
     if (ui.options) state.options = { dedupe: !!ui.options.dedupe };
     highlightTab();
     wireEvents();
@@ -400,7 +405,6 @@ function renderPanel() {
   else if (state.tab === "historico") setPanel(renderIncidentHistory(buildIncidentHistory(), state.histFilter));
   else if (state.tab === "validacion") setPanel(renderValidation(state.R, state.filter, state.valPage));
   else if (state.tab === "tareas") setPanel(renderTasks(state.R, state.taskFilter, state.taskPage));
-  else if (state.tab === "incidencias") setPanel(renderIssues(state.R));
 }
 
 // Pinta el panel con una transición suave de entrada.
@@ -596,30 +600,6 @@ function onConfigClick(e) {
     state.valPage.n = 1;
     if (state.R) setPanel(renderValidation(state.R, state.filter, state.valPage));
     saveUi();
-    return;
-  }
-  // Corregir typo de Job Code: crea un alias desconocido -> sugerido.
-  const fixJc = t.closest && t.closest("[data-fix-jc]");
-  if (fixJc) {
-    const [de, a] = fixJc.getAttribute("data-fix-jc").split("|");
-    state.cfg.aliases = state.cfg.aliases || [];
-    if (!state.cfg.aliases.some((x) => (x.de || "").toUpperCase() === (de || "").toUpperCase())) {
-      state.cfg.aliases.push({ de, a });
-      saveConfig(state.cfg);
-    }
-    recompute();
-    toast(`Alias agregado: "${de}" → "${a}". Corregido en todo el reporte.`);
-    return;
-  }
-  const add = t.closest && t.closest("[data-add-person]");
-  if (add) {
-    const name = add.getAttribute("data-add-person");
-    if (!state.cfg.roster.some((p) => p.dev === name)) {
-      state.cfg.roster.push({ dev: name, equipo: "", pm: "", tipo: "Fijo", cuentaPM: "Sí" });
-      saveConfig(state.cfg);
-    }
-    recompute();
-    toast(`"${name}" agregado al roster. Asígnale equipo y tipo en Configuración.`);
     return;
   }
   const delFer = t.closest && t.closest("[data-del-fer]");

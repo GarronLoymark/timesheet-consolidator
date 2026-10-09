@@ -359,62 +359,6 @@ export function renderTasks(R, filter = {}, pag = {}) {
   return `${header}${toolbar}<div class="scroll"><table>${head}<tbody>${body}</tbody></table></div>${pager}`;
 }
 
-export function renderIssues(R) {
-  const header = pageHeader(
-    icon.alert(18),
-    "Incidencias de datos",
-    R.issues.length ? `${R.issues.length} incidencias para corregir en el origen` : "Sin problemas detectados"
-  );
-  if (R.issues.length === 0) return `${header}<div class="empty">Sin incidencias. Los datos están limpios.</div>`;
-
-  const byType = {};
-  for (const i of R.issues) {
-    const t = i.tipo.replace(/"[^"]*"/g, '"…"').replace(/\d+/g, "N");
-    (byType[t] ||= []).push(i);
-  }
-  const isErr = (tipo) => /no existe|no está en Equipos|incompleta/i.test(tipo);
-  // Valor específico de cada fila (código, fila duplicada o nombre) para no repetir el tipo.
-  const specific = (tipo) => {
-    const q = /"([^"]+)"/.exec(tipo);
-    if (q) return q[1];
-    const f = /fila (\d+)/.exec(tipo);
-    if (f) return "fila " + f[1];
-    return "";
-  };
-  const cleanTitle = (t) =>
-    t.replace(/\s*"…"\s*/g, " ").replace(/^(.*?)(:|$).*/, (m, a) => a).replace(/\s+/g, " ").trim();
-
-  let rows = "";
-  for (const t of Object.keys(byType)) {
-    const list = byType[t];
-    const err = isErr(t);
-    rows +=
-      `<tr class="grp inc"><td colspan="3">` +
-      `<span class="sev ${err ? "err" : "warn"}"></span>${esc(cleanTitle(t))}` +
-      `<span class="grp-count">${list.length}</span></td></tr>`;
-    for (const i of list) {
-      const m = /^"(.+)" no está en Equipos$/.exec(i.tipo);
-      const action = m
-        ? ` <button class="miniadd" data-add-person="${esc(m[1])}">+ Agregar al roster</button>`
-        : "";
-      const fix = i.sugerencia
-        ? ` <span class="suggest">¿Quisiste decir <b>${esc(i.sugerencia)}</b>?</span>` +
-          ` <button class="miniadd" data-fix-jc="${esc(i.jobCode)}|${esc(i.sugerencia)}">Corregir</button>`
-        : "";
-      const spec = specific(i.tipo);
-      const detail =
-        (spec ? `<b>${esc(spec)}</b>` : "") + (spec && i.detalle ? " · " : "") + (i.detalle ? esc(i.detalle) : "");
-      rows += `<tr><td>${i.tab ? esc(i.tab) : "—"}</td><td class="n">${esc(i.row)}</td><td>${detail || "—"}${action}${fix}</td></tr>`;
-    }
-  }
-  return (
-    `${header}<div class="scroll"><table class="sortable">` +
-    `<thead><tr><th>Pestaña</th><th class="n">Fila</th><th>Detalle</th></tr></thead>` +
-    `<tbody>${rows}</tbody></table></div>`
-  );
-}
-
-/** Histórico de incidencias por DEV (todas las semanas cargadas), con filtros. */
 export function renderIncidentHistory(history, filter = {}) {
   const header = pageHeader(
     icon.alert(18),
