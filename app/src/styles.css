@@ -189,7 +189,7 @@ nav.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-colo
   border-radius: 0 0 var(--radius) var(--radius); padding: 14px 16px 16px; box-shadow: var(--shadow);
 }
 
-.toolbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-bottom: 12px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin-bottom: 12px; }
 .searchbox { position: relative; display: flex; align-items: center; }
 .searchbox .ic { position: absolute; left: 10px; color: var(--muted); width: 16px; height: 16px; }
 .searchbox input { padding-left: 32px; min-width: 220px; }
