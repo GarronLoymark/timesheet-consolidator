@@ -233,9 +233,24 @@ function ingestWorkbook(name, buf) {
   }
 
   const parsed = parseTimesheetWorkbook(XLSX, wb, name);
+  keepMainMonth(parsed);
   const idx = state.timesheetFiles.findIndex((f) => f.name === name);
   if (idx >= 0) state.timesheetFiles[idx] = { name, parsed };
   else state.timesheetFiles.push({ name, parsed });
+}
+
+// Cada archivo conserva solo su mes principal (el de más registros). Descarta
+// filas de otros meses (p. ej. restos en blanco de meses previos).
+function keepMainMonth(parsed) {
+  const month = (iso) => (iso ? iso.slice(0, 7) : null);
+  const counts = {};
+  for (const r of parsed.rows) {
+    if (r.kind === "data" && r.date) counts[month(r.date)] = (counts[month(r.date)] || 0) + 1;
+  }
+  const main = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (!main) return;
+  parsed.rows = parsed.rows.filter((r) => r.date && month(r.date) === main);
+  parsed.issues = parsed.issues.filter((i) => !i.date || month(i.date) === main);
 }
 
 // Restaura los archivos guardados en IndexedDB al abrir la app.
