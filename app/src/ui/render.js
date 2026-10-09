@@ -12,6 +12,29 @@ export function esc(s) {
 const f2 = (n) => Number(n).toFixed(2);
 const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
+// Convierte URLs http/https dentro de un texto en enlaces (escapando el resto).
+function linkify(text) {
+  const re = /(https?:\/\/[^\s<>"']+)/gi;
+  let out = "";
+  let last = 0;
+  let m;
+  while ((m = re.exec(text))) {
+    out += esc(text.slice(last, m.index));
+    out += `<a href="${esc(m[0])}" target="_blank" rel="noopener noreferrer">${esc(m[0])}</a>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(text.slice(last));
+}
+
+// Texto con enlace: si la celda trae hipervínculo, envuelve el texto; si no,
+// convierte en enlaces las URLs que aparezcan dentro del texto.
+function linkText(text, url) {
+  const t = String(text == null ? "" : text);
+  const safeUrl = url && /^https?:\/\//i.test(url) ? url : "";
+  if (safeUrl && t.trim()) return `<a href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer">${esc(t)}</a>`;
+  return linkify(t);
+}
+
 /** Encabezado estándar de cada sección (título + subtítulo + zona derecha). */
 function pageHeader(ic, title, subtitle, right = "") {
   return (
@@ -298,8 +321,8 @@ export function renderTasks(R, filter = {}, pag = {}) {
       gDate = d.date;
     }
     body +=
-      `<tr><td>${esc(d.client)}</td><td>${esc(d.task.slice(0, 80))}</td>` +
-      `<td>${esc((d.comm || "").slice(0, 40))}</td><td>${esc(d.typ || "")}</td>` +
+      `<tr><td>${esc(d.client)}</td><td class="tcell">${linkText(d.task.slice(0, 90), d.taskUrl)}</td>` +
+      `<td class="tcell">${linkText((d.comm || "").slice(0, 60), d.commUrl)}</td><td>${esc(d.typ || "")}</td>` +
       `<td>${esc(fmtDay(d.date))}</td><td>${esc(d.res)}</td><td class="n">${f2(d.hrs)}</td></tr>`;
     gSum += d.hrs || 0;
   }

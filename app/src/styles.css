@@ -216,6 +216,8 @@ table.sortable thead th:hover { color: var(--accent); }
 th.sort-asc::after { content: " ↑"; color: var(--accent); font-weight: 700; }
 th.sort-desc::after { content: " ↓"; color: var(--accent); font-weight: 700; }
 td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.tcell a { color: var(--accent); text-decoration: none; }
+.tcell a:hover { text-decoration: underline; }
 tr.grp td {
   background: var(--accent-soft) !important; font-weight: 700; color: var(--accent);
   text-transform: uppercase; letter-spacing: 0.04em; font-size: 12px; padding: 8px 10px;

@@ -65,7 +65,8 @@ export function parseTimesheetWorkbook(XLSX, workbook, fileName) {
   let seq = 0; // orden de aparición en el archivo (para mostrar como el Excel)
 
   for (const name of workbook.SheetNames) {
-    const matrix = sheetToMatrix(XLSX, workbook.Sheets[name]);
+    const sheet = workbook.Sheets[name];
+    const matrix = sheetToMatrix(XLSX, sheet);
 
     // Buscar la fila de encabezados en las primeras 5 filas (por nombre).
     let headerRow = -1;
@@ -84,6 +85,15 @@ export function parseTimesheetWorkbook(XLSX, workbook, fileName) {
     if (headerRow < 0) continue; // pestaña sin tabla reconocible (p. ej. Sheet1)
 
     const get = (r, k) => (k in cols ? r[cols[k]] : null);
+    // Hipervínculo (http/https) de una celda, si lo tiene. Se ajusta el índice
+    // de columna/fila al origen del rango de la hoja (p. ej. empieza en B).
+    const origin = XLSX.utils.decode_range(sheet["!ref"] || "A1").s;
+    const linkAt = (i, k) => {
+      if (!(k in cols)) return "";
+      const c = sheet[XLSX.utils.encode_cell({ r: origin.r + i, c: origin.c + cols[k] })];
+      const t = c && c.l && c.l.Target;
+      return t && /^https?:\/\//i.test(t) ? t : "";
+    };
     let dataCount = 0;
 
     for (let i = headerRow + 1; i < matrix.length; i++) {
@@ -134,7 +144,9 @@ export function parseTimesheetWorkbook(XLSX, workbook, fileName) {
         seq: seq++,
         client: clean(client),
         task: clean(task),
+        taskUrl: linkAt(i, "task name"),
         comm: comm == null ? "" : clean(comm),
+        commUrl: linkAt(i, "comments"),
         typ: clean(typ),
         date: d,
         res: clean(res),
