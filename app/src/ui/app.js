@@ -59,6 +59,7 @@ const state = {
   options: { dedupe: false }, // opciones del reporte (ignorar duplicados)
   overrides: {}, // ajuste manual Sí/No por fila (key file|tab|row)
   taskFilter: { res: "", dia: "" }, // filtros de Horas por recurso y fecha
+  taskPage: { size: 15, n: 1 }, // paginación de la tabla de Tareas
   ui: {}, // preferencias recordadas (semana/filtros/pestaña)
 };
 
@@ -397,7 +398,7 @@ function renderPanel() {
   if (state.tab === "resumen") setPanel(renderOverview(state.R));
   else if (state.tab === "historico") setPanel(renderIncidentHistory(buildIncidentHistory(), state.histFilter));
   else if (state.tab === "validacion") setPanel(renderValidation(state.R, state.filter));
-  else if (state.tab === "tareas") setPanel(renderTasks(state.R, state.taskFilter));
+  else if (state.tab === "tareas") setPanel(renderTasks(state.R, state.taskFilter, state.taskPage));
   else if (state.tab === "incidencias") setPanel(renderIssues(state.R));
 }
 
@@ -492,7 +493,14 @@ function onConfigInput(e) {
   if (t.id === "taskRes" || t.id === "taskDia") {
     if (t.id === "taskRes") state.taskFilter.res = t.value;
     else state.taskFilter.dia = t.value;
-    if (state.R) setPanel(renderTasks(state.R, state.taskFilter));
+    state.taskPage.n = 1; // al filtrar, vuelve a la primera página
+    if (state.R) setPanel(renderTasks(state.R, state.taskFilter, state.taskPage));
+    return;
+  }
+  if (t.id === "taskSize") {
+    state.taskPage.size = Number(t.value);
+    state.taskPage.n = 1;
+    if (state.R) setPanel(renderTasks(state.R, state.taskFilter, state.taskPage));
     return;
   }
 
@@ -554,7 +562,13 @@ function onConfigClick(e) {
   }
   if (t.id === "taskClear") {
     state.taskFilter = { res: "", dia: "" };
-    if (state.R) setPanel(renderTasks(state.R, state.taskFilter));
+    state.taskPage.n = 1;
+    if (state.R) setPanel(renderTasks(state.R, state.taskFilter, state.taskPage));
+    return;
+  }
+  if (t.id === "taskPrev" || t.id === "taskNext") {
+    state.taskPage.n = Math.max(1, state.taskPage.n + (t.id === "taskNext" ? 1 : -1));
+    if (state.R) setPanel(renderTasks(state.R, state.taskFilter, state.taskPage));
     return;
   }
   // Corregir typo de Job Code: crea un alias desconocido -> sugerido.

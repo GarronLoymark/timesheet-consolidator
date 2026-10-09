@@ -241,7 +241,7 @@ export function renderValidation(R, filter = {}) {
   return `${header}${nota}${toolbar}<div id="valBody">${validationTable(R, filtered)}</div>`;
 }
 
-export function renderTasks(R, filter = {}) {
+export function renderTasks(R, filter = {}, pag = {}) {
   const header = pageHeader(
     icon.tasks(18),
     "Horas por recurso y fecha",
@@ -257,11 +257,20 @@ export function renderTasks(R, filter = {}) {
     .slice()
     .sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : (a.seq ?? 0) - (b.seq ?? 0)));
 
+  // Paginación.
+  const sizes = [10, 15, 25, 50];
+  const size = sizes.includes(pag.size) ? pag.size : 15;
+  const pages = Math.max(1, Math.ceil(rows.length / size));
+  const n = Math.min(Math.max(1, pag.n || 1), pages);
+  const start = (n - 1) * size;
+  const pageRows = rows.slice(start, start + size);
+
   const opt = (val, sel, label) => `<option value="${esc(val)}" ${val === sel ? "selected" : ""}>${esc(label ?? val)}</option>`;
   const toolbar =
     `<div class="toolbar">` +
     `<label class="f">Recurso<select id="taskRes"><option value="">Todos</option>${resources.map((r) => opt(r, f.res)).join("")}</select></label>` +
     `<label class="f">Día<select id="taskDia"><option value="">Todos</option>${R.days.map((d) => opt(d, f.dia, fmtDay(d))).join("")}</select></label>` +
+    `<label class="f">Por página<select id="taskSize">${sizes.map((s) => opt(s, size)).join("")}</select></label>` +
     (f.res || f.dia ? `<button class="miniadd" id="taskClear">Limpiar filtros</button>` : "") +
     `<span class="count">${rows.length} de ${R.dev.length}</span>` +
     `</div>`;
@@ -270,14 +279,24 @@ export function renderTasks(R, filter = {}) {
     `<thead><tr><th>Job Code</th><th>Tarea</th><th>Comentario</th><th>Tipo</th>` +
     `<th>Fecha</th><th>Recurso</th><th class="n">Horas</th></tr></thead>`;
   let body = "";
-  for (const d of rows) {
+  for (const d of pageRows) {
     body +=
       `<tr><td>${esc(d.client)}</td><td>${esc(d.task.slice(0, 80))}</td>` +
       `<td>${esc((d.comm || "").slice(0, 40))}</td><td>${esc(d.typ || "")}</td>` +
       `<td>${esc(fmtDay(d.date))}</td><td>${esc(d.res)}</td><td class="n">${f2(d.hrs)}</td></tr>`;
   }
   if (!rows.length) body = `<tr><td colspan="7"><div class="empty">Sin resultados para el filtro.</div></td></tr>`;
-  return `${header}${toolbar}<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>`;
+
+  const from = rows.length ? start + 1 : 0;
+  const to = Math.min(start + size, rows.length);
+  const pager =
+    `<div class="pager">` +
+    `<button class="miniadd" id="taskPrev" ${n <= 1 ? "disabled" : ""}>‹ Anterior</button>` +
+    `<span class="pageinfo">${from}–${to} de ${rows.length} · página ${n} de ${pages}</span>` +
+    `<button class="miniadd" id="taskNext" ${n >= pages ? "disabled" : ""}>Siguiente ›</button>` +
+    `</div>`;
+
+  return `${header}${toolbar}<div class="scroll"><table class="sortable">${head}<tbody>${body}</tbody></table></div>${pager}`;
 }
 
 export function renderIssues(R) {
