@@ -301,32 +301,29 @@ export function renderTasks(R, filter = {}, pag = {}) {
   const head =
     `<thead><tr><th>Job Code</th><th>Tarea</th><th>Comentario</th><th>Tipo</th>` +
     `<th>Fecha</th><th>Recurso</th><th class="n">Horas</th></tr></thead>`;
+
+  // Total por día de cada persona (sobre todas las filas, no solo la página).
+  const dayTotals = new Map();
+  for (const r of rows) {
+    const k = r.res + "|" + r.date;
+    dayTotals.set(k, (dayTotals.get(k) || 0) + (r.hrs || 0));
+  }
+
   let body = "";
-  // Subtotal al final de cada día de cada persona (según lo que se muestra en la página).
-  let gKey = null;
-  let gSum = 0;
-  let gRes = "";
-  let gDate = "";
-  const flush = () => {
-    if (gKey !== null)
-      body += `<tr class="subtot"><td colspan="6">Total · ${esc(gRes)} · ${esc(fmtDay(gDate))}</td><td class="n">${f2(gSum)}</td></tr>`;
-  };
-  for (const d of pageRows) {
-    const key = d.res + "|" + d.date;
-    if (key !== gKey) {
-      flush();
-      gKey = key;
-      gSum = 0;
-      gRes = d.res;
-      gDate = d.date;
-    }
+  for (let li = 0; li < pageRows.length; li++) {
+    const d = pageRows[li];
     body +=
       `<tr><td>${esc(d.client)}</td><td class="tcell">${linkText(d.task.slice(0, 90), d.taskUrl)}</td>` +
       `<td class="tcell">${linkText((d.comm || "").slice(0, 60), d.commUrl)}</td><td>${esc(d.typ || "")}</td>` +
       `<td>${esc(fmtDay(d.date))}</td><td>${esc(d.res)}</td><td class="n">${f2(d.hrs)}</td></tr>`;
-    gSum += d.hrs || 0;
+    // Subtotal solo tras la última fila real del día (aunque la página corte antes, no se muestra).
+    const key = d.res + "|" + d.date;
+    const next = rows[start + li + 1];
+    const isLastOfDay = !next || next.res + "|" + next.date !== key;
+    if (isLastOfDay) {
+      body += `<tr class="subtot"><td colspan="6">Total · ${esc(d.res)} · ${esc(fmtDay(d.date))}</td><td class="n">${f2(dayTotals.get(key) || 0)}</td></tr>`;
+    }
   }
-  flush();
   if (!rows.length) body = `<tr><td colspan="7"><div class="empty">Sin resultados para el filtro.</div></td></tr>`;
 
   const from = rows.length ? start + 1 : 0;
