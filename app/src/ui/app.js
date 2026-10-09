@@ -381,7 +381,7 @@ function buildIncidentHistory() {
     const R = compute(parsed, state.cfg, w.from, w.to, state.overrides, state.options);
     for (const i of R.issues) {
       if (!i.row) continue; // solo incidencias por fila (errores al ingresar datos)
-      out.push({ dev: i.res || i.tab || "", semana: w.label, from: w.from, to: w.to, date: i.date || "", tipo: i.tipo, detalle: i.detalle || "" });
+      out.push({ dev: i.res || i.tab || "", semana: w.label, from: w.from, to: w.to, date: i.date || "", hoja: i.tab || "", fila: i.row || "", tipo: i.tipo, detalle: i.detalle || "" });
     }
   }
   return out;

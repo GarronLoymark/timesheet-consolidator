@@ -446,13 +446,14 @@ export function renderIncidentHistory(history, filter = {}) {
     const sev = isErr(h.tipo) ? "err" : "warn";
     body +=
       `<tr><td><span class="sev ${sev}"></span>${esc(h.dev || "—")}</td><td>${esc(h.semana)}</td>` +
-      `<td>${h.date ? esc(fmtDay(h.date)) : "—"}</td><td>${esc(h.tipo)}</td><td>${h.detalle ? esc(h.detalle) : "—"}</td></tr>`;
+      `<td>${h.date ? esc(fmtDay(h.date)) : "—"}</td><td>${h.hoja ? esc(h.hoja) : "—"}</td><td class="n">${h.fila ? esc(h.fila) : "—"}</td>` +
+      `<td>${esc(h.tipo)}</td><td>${h.detalle ? esc(h.detalle) : "—"}</td></tr>`;
   }
-  if (!rows.length) body = `<tr><td colspan="5"><div class="empty">Sin resultados para el filtro.</div></td></tr>`;
+  if (!rows.length) body = `<tr><td colspan="7"><div class="empty">Sin resultados para el filtro.</div></td></tr>`;
 
   return (
     `${header}${toolbar}<div class="scroll"><table class="sortable">` +
-    `<thead><tr><th>DEV</th><th>Semana</th><th>Día</th><th>Tipo</th><th>Detalle</th></tr></thead>` +
+    `<thead><tr><th>DEV</th><th>Semana</th><th>Día</th><th>Hoja</th><th class="n">Fila</th><th>Tipo</th><th>Detalle</th></tr></thead>` +
     `<tbody>${body}</tbody></table></div>`
   );
 }
