@@ -560,7 +560,8 @@ function onConfigInput(e) {
     state.cfg.params = { ...state.cfg.params, [t.dataset.param]: Number(t.value) };
   } else if (t.dataset.r != null) {
     const i = +t.dataset.r;
-    state.cfg.roster[i] = { ...state.cfg.roster[i], [t.dataset.k]: t.value };
+    const val = t.type === "checkbox" ? t.checked : t.value;
+    state.cfg.roster[i] = { ...state.cfg.roster[i], [t.dataset.k]: val };
   } else if (t.dataset.a != null) {
     const i = +t.dataset.a;
     state.cfg.aliases[i] = { ...state.cfg.aliases[i], [t.dataset.k]: t.value };

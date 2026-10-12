@@ -68,7 +68,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
 
     const person = byKey.get(key(r.res));
     if (!person) unknownPeople.set(key(r.res), r.res);
-    if (person && person.tipo === "No incluir") continue;
+    if (person && (person.ignorar || person.tipo === "No incluir")) continue;
     if (person && person.tipo === "PM") {
       pmOwnRows.set(person.dev, (pmOwnRows.get(person.dev) || 0) + 1);
       continue;
@@ -190,7 +190,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
   // Validación de horas por persona y día.
   const people = new Map();
   for (const p of roster) {
-    if (p.tipo !== "PM" && p.tipo !== "No incluir") {
+    if (p.tipo !== "PM" && p.tipo !== "No incluir" && !p.ignorar) {
       people.set(p.dev, { dev: p.dev, equipo: p.equipo || "SIN EQUIPO", tipo: p.tipo || "Fijo" });
     }
   }

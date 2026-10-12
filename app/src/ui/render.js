@@ -425,12 +425,13 @@ export function renderConfig(cfg) {
         <td><input data-r="${i}" data-k="dev" value="${esc(r.dev)}"></td>
         <td><input data-r="${i}" data-k="equipo" value="${esc(r.equipo)}"></td>
         <td><input data-r="${i}" data-k="pm" value="${esc(r.pm || "")}"></td>
-        <td><select data-r="${i}" data-k="tipo">${["Fijo", "On demand", "PM", "No incluir"]
+        <td><select data-r="${i}" data-k="tipo">${["Fijo", "On demand", "PM"]
         .map((t) => `<option ${t === r.tipo ? "selected" : ""}>${t}</option>`)
         .join("")}</select></td>
         <td><select data-r="${i}" data-k="cuentaPM">${["Sí", "No"]
         .map((t) => `<option ${t === (r.cuentaPM || "Sí") ? "selected" : ""}>${t}</option>`)
         .join("")}</select></td>
+        <td class="n"><input type="checkbox" data-r="${i}" data-k="ignorar" title="Ignorar: no se incluye en el reporte" ${r.ignorar ? "checked" : ""}></td>
       </tr>`
     )
     .join("");
@@ -472,7 +473,7 @@ export function renderConfig(cfg) {
     <div class="cfg-card">
       <h3>${icon.users(16)} Equipos (roster)</h3>
       <div class="scroll"><table id="cfgRoster">
-        <thead><tr><th>DEV</th><th>Equipo</th><th>PM</th><th>Tipo</th><th>Cuenta PM</th></tr></thead>
+        <thead><tr><th>DEV</th><th>Equipo</th><th>PM</th><th>Tipo</th><th>Cuenta PM</th><th class="n">Ignorar</th></tr></thead>
         <tbody>${roster}</tbody>
       </table></div>
       <button id="cfgAddPerson" class="addbtn">+ Agregar persona</button>

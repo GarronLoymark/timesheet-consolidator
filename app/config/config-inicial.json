@@ -181,36 +181,41 @@
       "dev": "Juanita Gómez Moreno",
       "equipo": "Ops",
       "pm": "",
-      "tipo": "No incluir",
-      "cuentaPM": "Sí"
+      "tipo": "Fijo",
+      "cuentaPM": "Sí",
+      "ignorar": true
     },
     {
       "dev": "Daniela Sarmiento",
       "equipo": "Ops",
       "pm": "",
-      "tipo": "No incluir",
-      "cuentaPM": "Sí"
+      "tipo": "Fijo",
+      "cuentaPM": "Sí",
+      "ignorar": true
     },
     {
       "dev": "Valentina Bulla",
       "equipo": "Ops",
       "pm": "",
-      "tipo": "No incluir",
-      "cuentaPM": "Sí"
+      "tipo": "Fijo",
+      "cuentaPM": "Sí",
+      "ignorar": true
     },
     {
       "dev": "Liam",
       "equipo": "Ops",
       "pm": "",
-      "tipo": "No incluir",
-      "cuentaPM": "Sí"
+      "tipo": "Fijo",
+      "cuentaPM": "Sí",
+      "ignorar": true
     },
     {
       "dev": "Catalina Santilli",
       "equipo": "Ops",
       "pm": "",
-      "tipo": "No incluir",
-      "cuentaPM": "Sí"
+      "tipo": "Fijo",
+      "cuentaPM": "Sí",
+      "ignorar": true
     }
   ],
   "aliases": [

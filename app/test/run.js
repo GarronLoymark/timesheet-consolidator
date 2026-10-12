@@ -216,6 +216,18 @@ async function main() {
     it("con dedupe hay 6 filas DEV menos (los 6 duplicados; el Type de tarea distingue)", () => expect(Rd.dev.length).toBe(R.dev.length - 6));
   });
 
+  describe("Ignorar persona (check del roster)", () => {
+    const cfgIgnore = {
+      ...cfg,
+      roster: cfg.roster.map((p) => (p.dev === "QA Dev 6" ? { ...p, ignorar: true } : p)),
+    };
+    const Ri = compute(parsed, cfgIgnore, "2026-10-01", "2026-10-04", {});
+    it("aparece sin ignorar", () => expect(!!val(R, "QA Dev 6")).toBe(true));
+    it("con ignorar=true desaparece de Validación", () => expect(val(Ri, "QA Dev 6")).toBe(undefined));
+    it("con ignorar=true sus horas no se cuentan como registros DEV", () =>
+      expect(Ri.dev.some((d) => d.res === "QA Dev 6")).toBe(false));
+  });
+
   render(out);
 }
 
