@@ -155,7 +155,7 @@ async function main() {
 
   describe("Caso · Copiar para el cliente (Consolidado B:I)", () => {
     const rows = buildConsolidadoRows(R, cfg.jobcodes.map((j) => [j[0], j[1]]));
-    it("total de filas = 795 (405 DEV + 390 espejo PM)", () => expect(rows.length).toBe(795));
+    it("total de filas = 790 (405 DEV + 385 espejo PM; sin PM en fin de semana)", () => expect(rows.length).toBe(790));
     it("la suma de horas PM por equipo/día es exactamente 8 o 9", () => {
       const pmNames = new Set(Object.values(R.teamPM));
       const byKey = {};

@@ -44,10 +44,12 @@ export function buildConsolidadoEntries(R, jobcodes) {
     const devs = byTeam.get(team);
     for (const d of devs) entries.push(mk(d, d.res, d.hrs));
     // Filas espejo del PM: horas sin redondear para que la suma diaria sea 8 o 9.
+    // Solo en días con jornada de PM (hábiles); el PM no trabaja fines ni feriados.
     for (const d of devs) {
       const up = d.client.toUpperCase();
       if (d.cuentaPMPersona === "No") continue;
       if (up.startsWith("RKD") && up !== "RKD MTG" && up !== "RKD MTGINT") continue;
+      if (!porTarea.has(team + "|" + d.date)) continue; // fin de semana/feriado: sin PM
       const pmName = R.teamPM[team] || "PM SIN ASIGNAR";
       const hrs = d.auto === "Sí" ? porTarea.get(team + "|" + d.date) || 0 : 0;
       entries.push(mk(d, pmName, hrs));
