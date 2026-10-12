@@ -2,6 +2,7 @@
 // ExcelJS se recibe como parámetro para mantener el core puro.
 
 import { isWeekend, fmtDay } from "./dates.js";
+import { buildConsolidadoEntries } from "./consolidado.js";
 
 /**
  * Construye el libro de salida y devuelve un ArrayBuffer (writeBuffer).
@@ -82,22 +83,6 @@ export async function buildXlsx(ExcelJS, R, jobcodes) {
     c.fill = YEL;
     if (p[1] instanceof Date) c.numFmt = "dd/mm/yyyy";
   });
-  const MIN = "Parametros!$B$5";
-  const MAX = "Parametros!$B$6";
-  const UMB = "Parametros!$B$7";
-  const PMN = "Parametros!$B$8";
-  const PMA = "Parametros!$B$9";
-  wsP.getCell("A12").value = "Palabras clave de reuniones RKD MTG / RKD MTGINT que SÍ cuentan para el PM";
-  wsP.getCell("A12").font = FB;
-  wsP.getCell("A13").value =
-    "Se buscan en Type of task + Task Name + Comments. Los espacios al inicio o final importan.";
-  const KW0 = 14;
-  for (let i = 0; i < 40; i++) {
-    const c = wsP.getCell(KW0 + i, 1);
-    c.value = R.keywords[i] != null ? R.keywords[i] : null;
-    c.fill = YEL;
-  }
-  const KWR = `Parametros!$A$${KW0}:$A$${KW0 + 39}`;
   wsP.getColumn(1).width = 64;
   wsP.getColumn(2).width = 14;
 
@@ -109,84 +94,41 @@ export async function buildXlsx(ExcelJS, R, jobcodes) {
   // ---- JobCodes ----
   header(wsJ, 1, ["Client", "JobCode"]);
   jobcodes.forEach((j) => wsJ.addRow(j));
-  const JC = `JobCodes!$A$2:$B$${Math.max(2, jobcodes.length + 1)}`;
+  const round2 = (n) => Math.round((n || 0) * 100) / 100;
 
-  // ---- Consolidado ----
+  // ---- Consolidado ---- (valores ya calculados; el PM de último en cada equipo)
   wsC.getCell("B1").value = R.label;
   wsC.getCell("B1").font = { ...FB, size: 12 };
-  const hdr = [
-    "Job #", "Client", "Task Name", "Comments", "Type of task", "Date", "Resource", "Hours",
-    "Equipo", "Tipo recurso", "Tipo fila", "Cuenta PM (auto)", "Ajuste manual (Sí/No)", "Cuenta PM final", "Origen",
-  ];
-  header(wsC, 2, hdr, 2);
+  header(wsC, 2, ["Job #", "Client", "Task Name", "Comments", "Type of task", "Date", "Resource", "Hours", "Equipo"], 2);
   const r0 = 3;
-  const common = (r, d) => {
-    wsC.getCell(r, 2).value = { formula: `IFERROR(VLOOKUP(C${r},${JC},2,0),"NO EXISTE")` };
-    wsC.getCell(r, 3).value = d.client;
-    wsC.getCell(r, 4).value = d.task;
-    wsC.getCell(r, 5).value = d.comm || null;
-    wsC.getCell(r, 6).value = d.typ || null;
-    const dc = wsC.getCell(r, 7);
-    dc.value = toDate(d.date);
-    dc.numFmt = "dd/mm/yyyy";
-  };
-  R.dev.forEach((d, i) => {
+  const entries = buildConsolidadoEntries(R, jobcodes);
+  entries.forEach((e, i) => {
     const r = r0 + i;
-    common(r, d);
-    wsC.getCell(r, 8).value = d.res;
-    wsC.getCell(r, 9).value = d.hrs;
-    wsC.getCell(r, 10).value = d.equipo;
-    wsC.getCell(r, 11).value = d.tipo;
-    wsC.getCell(r, 12).value = "DEV";
-    const t = `" "&LOWER(F${r}&" "&D${r}&" "&E${r})&" "`;
-    wsC.getCell(r, 13).value =
-      d.cuentaPMPersona === "No"
-        ? "No"
-        : {
-            formula: `IF(LEFT(UPPER(TRIM(C${r})),3)<>"RKD","Sí",IF(OR(UPPER(TRIM(C${r}))="RKD MTG",UPPER(TRIM(C${r}))="RKD MTGINT"),IF(SUMPRODUCT((${KWR}<>"")*ISNUMBER(SEARCH(LOWER(${KWR}),${t})))>0,"Sí","No"),"No"))`,
-          };
-    wsC.getCell(r, 14).fill = YEL;
-    wsC.getCell(r, 14).dataValidation = { type: "list", allowBlank: true, formulae: ['"Sí,No"'] };
-    if (d.override === "Sí" || d.override === "No") wsC.getCell(r, 14).value = d.override;
-    wsC.getCell(r, 15).value = { formula: `IF(N${r}<>"",N${r},M${r})` };
-    wsC.getCell(r, 16).value = `${d.tab} fila ${d.row}`;
+    wsC.getCell(r, 2).value = e.job;
+    wsC.getCell(r, 3).value = e.client;
+    wsC.getCell(r, 4).value = e.task;
+    wsC.getCell(r, 5).value = e.comm || null;
+    wsC.getCell(r, 6).value = e.typ || null;
+    const dc = wsC.getCell(r, 7);
+    dc.value = toDate(e.date);
+    dc.numFmt = "dd/mm/yyyy";
+    wsC.getCell(r, 8).value = e.res;
+    const hc = wsC.getCell(r, 9);
+    hc.value = e.hrs;
+    hc.numFmt = "0.00";
+    wsC.getCell(r, 10).value = e.equipo;
+    if (e.pm) for (let c = 2; c <= 10; c++) wsC.getCell(r, c).fill = PMF;
   });
-
-  const lastDev = r0 + R.dev.length - 1;
-  let r = lastDev + 1;
-  R.dev.forEach((d, i) => {
-    const src = r0 + i;
-    const up = d.client.toUpperCase();
-    if (d.cuentaPMPersona === "No") return;
-    if (up.startsWith("RKD") && up !== "RKD MTG" && up !== "RKD MTGINT") return;
-    common(r, d);
-    wsC.getCell(r, 8).value = R.teamPM[d.equipo] || "PM SIN ASIGNAR";
-    wsC.getCell(r, 9).value = {
-      formula: `IF(O${r}="Sí",SUMIFS('Horas PM'!$I:$I,'Horas PM'!$A:$A,J${r},'Horas PM'!$B:$B,G${r}),0)`,
-    };
-    wsC.getCell(r, 10).value = d.equipo;
-    wsC.getCell(r, 11).value = "PM";
-    wsC.getCell(r, 12).value = "PM";
-    wsC.getCell(r, 15).value = { formula: `O${src}` };
-    wsC.getCell(r, 16).value = `Fila ${src}`;
-    for (let c = 2; c <= 16; c++) wsC.getCell(r, c).fill = PMF;
-    r++;
-  });
-
-  const last = Math.max(r - 1, r0);
-  for (let i = r0; i <= last; i++) wsC.getCell(i, 9).numFmt = "0.00";
-  wsC.autoFilter = { from: { row: 2, column: 2 }, to: { row: last, column: 16 } };
+  const last = Math.max(r0 + entries.length - 1, r0);
+  wsC.autoFilter = { from: { row: 2, column: 2 }, to: { row: last, column: 10 } };
   wsC.views = [{ state: "frozen", ySplit: 2 }];
-  [3, 9, 12, 48, 28, 22, 11, 22, 8, 16, 11, 8, 11, 12, 11, 18].forEach(
-    (w, i) => (wsC.getColumn(i + 1).width = w)
-  );
+  [3, 9, 12, 48, 28, 22, 11, 22, 8, 16].forEach((w, i) => (wsC.getColumn(i + 1).width = w));
   wsC.addConditionalFormatting({
     ref: `B${r0}:B${last}`,
     rules: [{ type: "cellIs", operator: "equal", formulae: ['"NO EXISTE"'], style: { fill: REDF } }],
   });
-  const CR = (col) => `Consolidado!$${col}$${r0}:$${col}$${last}`;
 
-  // ---- Validacion ----
+  // ---- Validacion ---- (valores ya calculados)
   wsV.getCell("A1").value = "Validación de horas por recurso";
   wsV.getCell("A1").font = { ...FB, size: 12 };
   const nd = R.days.length;
@@ -201,7 +143,6 @@ export async function buildXlsx(ExcelJS, R, jobcodes) {
   const cMin = cT + 1;
   const cMax = cT + 2;
   const cE = cT + 3;
-  const nWd = R.weekdays.length;
   R.validation.forEach((v, i) => {
     const rr = 4 + i;
     wsV.getCell(rr, 1).value = v.dev;
@@ -209,42 +150,20 @@ export async function buildXlsx(ExcelJS, R, jobcodes) {
     wsV.getCell(rr, 3).value = v.tipo;
     R.days.forEach((d, j) => {
       const c = wsV.getCell(rr, 4 + j);
-      c.value = { formula: `SUMIFS(${CR("I")},${CR("H")},$A${rr},${CR("G")},${L(4 + j)}$2,${CR("L")},"DEV")` };
+      const h = round2(v.perDay[d]);
+      c.value = h;
       c.numFmt = "0.00";
       if (nonWorking(d)) c.fill = fill("EDEDED");
+      else if (v.tipo === "Fijo" && (h < R.params.minDia || h > R.params.maxDia)) c.fill = REDF;
     });
-    wsV.getCell(rr, cT).value = { formula: `SUM(D${rr}:${L(3 + nd)}${rr})` };
+    wsV.getCell(rr, cT).value = round2(v.total);
     wsV.getCell(rr, cT).numFmt = "0.00";
-    const t = `${L(cT)}${rr}`;
-    const mn = `${L(cMin)}${rr}`;
-    const mx = `${L(cMax)}${rr}`;
-    wsV.getCell(rr, cMin).value = { formula: `IF($C${rr}="On demand","",${nWd}*${MIN})` };
-    wsV.getCell(rr, cMax).value = { formula: `IF($C${rr}="On demand","",${nWd}*${MAX})` };
-    wsV.getCell(rr, cE).value = {
-      formula: `IF($C${rr}="On demand","On demand: "&TEXT(${t},"0.00")&" h en la semana",IF(${t}<${mn},"Faltan "&TEXT(${mn}-${t},"0.00")&" h",IF(${t}>${mx},"Excede "&TEXT(${t}-${mx},"0.00")&" h","OK")))`,
-    };
-  });
-  const lv = 3 + Math.max(R.validation.length, 1);
-  R.days.forEach((d, j) => {
-    if (nonWorking(d)) return;
-    const col = L(4 + j);
-    wsV.addConditionalFormatting({
-      ref: `${col}4:${col}${lv}`,
-      rules: [
-        {
-          type: "expression",
-          formulae: [`AND($C4="Fijo",OR(${col}4<${MIN},${col}4>${MAX}))`],
-          style: { fill: REDF },
-        },
-      ],
-    });
-  });
-  wsV.addConditionalFormatting({
-    ref: `${L(cE)}4:${L(cE)}${lv}`,
-    rules: [
-      { type: "cellIs", operator: "equal", formulae: ['"OK"'], style: { fill: GRNF } },
-      { type: "expression", formulae: [`AND($C4="Fijo",${L(cE)}4<>"OK")`], style: { fill: REDF } },
-    ],
+    wsV.getCell(rr, cMin).value = v.tipo === "On demand" ? "" : v.min;
+    wsV.getCell(rr, cMax).value = v.tipo === "On demand" ? "" : v.max;
+    const ec = wsV.getCell(rr, cE);
+    ec.value = v.estado;
+    if (v.estado === "OK") ec.fill = GRNF;
+    else if (v.tipo === "Fijo" && v.estado !== "OK") ec.fill = REDF;
   });
   wsV.getColumn(1).width = 24;
   wsV.getColumn(2).width = 18;
@@ -252,35 +171,26 @@ export async function buildXlsx(ExcelJS, R, jobcodes) {
   wsV.getColumn(cE).width = 28;
   wsV.views = [{ state: "frozen", xSplit: 3, ySplit: 3 }];
 
-  // ---- Horas PM ----
+  // ---- Horas PM ---- (valores ya calculados)
   header(wsH, 1, [
     "Equipo", "Fecha", "PM", "DEVs fijos con horas", "Horas de los fijos", "Promedio por DEV fijo",
-    "Horas PM del día", "Tareas que cuentan", "Horas PM por tarea", "Control: total asignado",
+    "Horas PM del día", "Tareas que cuentan", "Horas PM por tarea", "Total asignado",
   ]);
   let hr = 2;
   for (const p of R.pm) {
-    const dcol = L(4 + R.days.indexOf(p.date));
     wsH.getCell(hr, 1).value = p.equipo;
     const dc = wsH.getCell(hr, 2);
     dc.value = toDate(p.date);
     dc.numFmt = "dd/mm/yyyy";
     wsH.getCell(hr, 3).value = p.pm;
-    wsH.getCell(hr, 4).value = {
-      formula: `COUNTIFS(Validacion!$B$4:$B$${lv},A${hr},Validacion!$C$4:$C$${lv},"Fijo",Validacion!$${dcol}$4:$${dcol}$${lv},">0")`,
-    };
-    wsH.getCell(hr, 5).value = {
-      formula: `SUMIFS(${CR("I")},${CR("J")},A${hr},${CR("G")},B${hr},${CR("K")},"Fijo",${CR("L")},"DEV")`,
-    };
-    wsH.getCell(hr, 6).value = { formula: `IFERROR(E${hr}/D${hr},0)` };
-    wsH.getCell(hr, 7).value = { formula: `IF(H${hr}=0,0,IF(F${hr}>=${UMB},${PMA},${PMN}))` };
-    wsH.getCell(hr, 8).value = {
-      formula: `COUNTIFS(${CR("J")},A${hr},${CR("G")},B${hr},${CR("L")},"DEV",${CR("O")},"Sí")`,
-    };
-    wsH.getCell(hr, 9).value = { formula: `IFERROR(G${hr}/H${hr},0)` };
-    wsH.getCell(hr, 10).value = {
-      formula: `SUMIFS(${CR("I")},${CR("J")},A${hr},${CR("G")},B${hr},${CR("L")},"PM")`,
-    };
-    [5, 6, 7, 9, 10].forEach((c) => (wsH.getCell(hr, c).numFmt = "0.00"));
+    wsH.getCell(hr, 4).value = p.devsFijos;
+    wsH.getCell(hr, 5).value = round2(p.horasFijos);
+    wsH.getCell(hr, 6).value = round2(p.prom);
+    wsH.getCell(hr, 7).value = p.horasPM;
+    wsH.getCell(hr, 8).value = p.tareas;
+    wsH.getCell(hr, 9).value = round2(p.porTarea);
+    wsH.getCell(hr, 10).value = p.horasPM;
+    [5, 6, 9].forEach((c) => (wsH.getCell(hr, c).numFmt = "0.00"));
     hr++;
   }
   wsH.getCell(hr, 1).value = "TOTAL";

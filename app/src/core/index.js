@@ -8,5 +8,5 @@ export { normClient, closestJobCode, codeFromTask } from "./jobcodes.js";
 export { autoCount } from "./rules.js";
 export { compute } from "./compute.js";
 export { buildXlsx } from "./excel.js";
-export { buildConsolidadoRows } from "./consolidado.js";
+export { buildConsolidadoRows, buildConsolidadoEntries } from "./consolidado.js";
 

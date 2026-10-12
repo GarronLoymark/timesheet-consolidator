@@ -24,8 +24,8 @@ cuando se agreguen. Luego abre <http://localhost:8777/index.html>.
 1. Arrastra los `.xlsx` / `.xlsm` exportados del timesheet (uno o varios equipos).
 2. Elige la semana (por defecto, la más reciente) o un rango personalizado.
 3. Revisa **Validación**, **Tareas** e **Histórico de incidencias**.
-4. Pulsa **Descargar Excel** para obtener `Timesheet <semana>.xlsx` con fórmulas.
-5. Ajusta la **Configuración** (parámetros, palabras clave, roster, alias) si hace
+4. Pulsa **Descargar Excel** para obtener `Timesheet <semana>.xlsx` con las horas consolidadas.
+5. Ajusta la **Configuración** (parámetros, roster, alias, feriados) si hace
    falta; se guarda en tu navegador.
 
 ## Estructura

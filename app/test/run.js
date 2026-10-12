@@ -69,18 +69,14 @@ async function main() {
   });
 
   describe("Caso 6 · ¿Cuenta para el PM?", () => {
-    const kw = cfg.keywords;
-    const mk = (client, task = "", typ = "", comm = "") => ({ client, task, typ, comm });
-    it("BFF (no RKD) -> Sí", () => expect(autoCount(mk("BFF", "Homepage Banner"), undefined, kw)).toBe("Sí"));
-    it("RKD MTG Daily Scrum -> Sí", () => expect(autoCount(mk("RKD MTG", "Daily Scrum", "Meeting"), undefined, kw)).toBe("Sí"));
-    it("RKD MTG 'Implementation review' -> No", () =>
-      expect(autoCount(mk("RKD MTG", "Implementation review", "Meeting"), undefined, kw)).toBe("No"));
-    it("RKD MTG 'Sync with PM about scope' -> Sí", () =>
-      expect(autoCount(mk("RKD MTG", "Sync with PM about scope", "Meeting"), undefined, kw)).toBe("Sí"));
-    it("RKD TRAIN -> No", () => expect(autoCount(mk("RKD TRAIN", "Lightboxes training"), undefined, kw)).toBe("No"));
-    it("cuentaPM=No con BFF -> No", () => expect(autoCount(mk("BFF", "x"), { cuentaPM: "No" }, kw)).toBe("No"));
-    it("keyword vacía no hace que todo cuente", () =>
-      expect(autoCount(mk("RKD MTG", "nada"), undefined, ["", ...kw.filter((k) => k !== "daily")])).toBe("No"));
+    const mk = (client, typ = "") => ({ client, typ });
+    it("BFF (no RKD) -> Sí", () => expect(autoCount(mk("BFF"))).toBe("Sí"));
+    it("RKD MTG con type 'Daily meeting' -> Sí", () => expect(autoCount(mk("RKD MTG", "Daily meeting"))).toBe("Sí"));
+    it("RKD MTGINT con type 'Daily meeting' -> Sí", () => expect(autoCount(mk("RKD MTGINT", "daily meeting"))).toBe("Sí"));
+    it("RKD MTG con otro type -> No", () => expect(autoCount(mk("RKD MTG", "Meeting"))).toBe("No"));
+    it("RKD MTG sin type -> No", () => expect(autoCount(mk("RKD MTG", ""))).toBe("No"));
+    it("RKD TRAIN -> No", () => expect(autoCount(mk("RKD TRAIN", "Daily meeting"))).toBe("No"));
+    it("cuentaPM=No con BFF -> No", () => expect(autoCount(mk("BFF"), { cuentaPM: "No" })).toBe("No"));
   });
 
   describe("Semanas · etiquetas", () => {
@@ -97,7 +93,7 @@ async function main() {
   describe("Caso 2 · Totales de la semana 1 (1-2 OCT)", () => {
     it("etiqueta = '1-2 OCT'", () => expect(R.label).toBe("1-2 OCT"));
     it("filas DEV incluidas = 405", () => expect(R.dev.length).toBe(405));
-    it("filas DEV auto 'Sí' = 375", () => expect(R.dev.filter((d) => d.auto === "Sí").length).toBe(375));
+    it("filas DEV auto 'Sí' = 360", () => expect(R.dev.filter((d) => d.auto === "Sí").length).toBe(360));
     it("personas en Validación = 22", () => expect(R.validation.length).toBe(22));
     it("incidencias = 23", () => expect(R.issues.length).toBe(23));
     it("horas PM totales = 66", () => expect(sumPM(R)).toBe(66));
@@ -147,14 +143,14 @@ async function main() {
       expect(p.horasPM).toBe(horasPM);
       expect(p.tareas).toBe(tareas);
     };
-    it("Email 01/10: 5 · 43.70 · 8.74 · 9 · 67", () => check("Email", "2026-10-01", 5, 43.7, 8.74, 9, 67));
+    it("Email 01/10: 5 · 43.70 · 8.74 · 9 · 66", () => check("Email", "2026-10-01", 5, 43.7, 8.74, 9, 66));
     it("Email 02/10: 5 · 40.00 · 8.00 · 8 · 67", () => check("Email", "2026-10-02", 5, 40, 8, 8, 67));
-    it("QA 01/10: 7 · 56.00 · 8.00 · 8 · 79", () => check("QA", "2026-10-01", 7, 56, 8, 8, 79));
+    it("QA 01/10: 7 · 56.00 · 8.00 · 8 · 78", () => check("QA", "2026-10-01", 7, 56, 8, 8, 78));
     it("QA 02/10: 7 · 56.00 · 8.00 · 8 · 88", () => check("QA", "2026-10-02", 7, 56, 8, 8, 88));
-    it("Standard 01/10: 4 · 34.00 · 8.50 · 9 · 22", () => check("Standard", "2026-10-01", 4, 34, 8.5, 9, 22));
-    it("Standard 02/10: 4 · 32.00 · 8.00 · 8 · 16", () => check("Standard", "2026-10-02", 4, 32, 8, 8, 16));
-    it("Web 01/10: 3 · 24.00 · 8.00 · 8 · 18", () => check("Web", "2026-10-01", 3, 24, 8, 8, 18));
-    it("Web 02/10: 3 · 22.50 · 7.50 · 8 · 13", () => check("Web", "2026-10-02", 3, 22.5, 7.5, 8, 13));
+    it("Standard 01/10: 4 · 34.00 · 8.50 · 9 · 17", () => check("Standard", "2026-10-01", 4, 34, 8.5, 9, 17));
+    it("Standard 02/10: 4 · 32.00 · 8.00 · 8 · 12", () => check("Standard", "2026-10-02", 4, 32, 8, 8, 12));
+    it("Web 01/10: 3 · 24.00 · 8.00 · 8 · 16", () => check("Web", "2026-10-01", 3, 24, 8, 8, 16));
+    it("Web 02/10: 3 · 22.50 · 7.50 · 8 · 11", () => check("Web", "2026-10-02", 3, 22.5, 7.5, 8, 11));
   });
 
   describe("Caso · Copiar para el cliente (Consolidado B:I)", () => {

@@ -417,8 +417,6 @@ export function renderConfig(cfg) {
     )
     .join("");
 
-  const kw = (cfg.keywords || []).map((k) => k.replace(/ /g, "·")).join("\n");
-
   const roster = (cfg.roster || [])
     .map(
       (r, i) => `<tr>
@@ -458,16 +456,9 @@ export function renderConfig(cfg) {
   );
 
   return `${header}<div class="cfg">
-    <div class="cfg-grid">
-      <div class="cfg-card">
-        <h3>${icon.settings(16)} Parámetros</h3>
-        <div class="field-grid">${paramRows}</div>
-      </div>
-      <div class="cfg-card">
-        <h3>${icon.search(16)} Palabras clave de reuniones</h3>
-        <p class="note">Una por línea. <code>·</code> representa un espacio (importan: <code>·pm·</code>).</p>
-        <textarea id="cfgKeywords" rows="7">${esc(kw)}</textarea>
-      </div>
+    <div class="cfg-card">
+      <h3>${icon.settings(16)} Parámetros</h3>
+      <div class="field-grid">${paramRows}</div>
     </div>
 
     <div class="cfg-card">

@@ -554,7 +554,7 @@ function onConfigInput(e) {
     return;
   }
 
-  if (!t.matches("[data-param], [data-r], [data-a], [data-fer], #cfgKeywords")) return;
+  if (!t.matches("[data-param], [data-r], [data-a], [data-fer]")) return;
 
   if (t.dataset.param) {
     state.cfg.params = { ...state.cfg.params, [t.dataset.param]: Number(t.value) };
@@ -569,11 +569,6 @@ function onConfigInput(e) {
     const i = +t.dataset.fer;
     state.cfg.feriados = state.cfg.feriados || [];
     state.cfg.feriados[i] = { ...state.cfg.feriados[i], [t.dataset.k]: t.value };
-  } else if (t.id === "cfgKeywords") {
-    state.cfg.keywords = t.value
-      .split("\n")
-      .map((l) => l.replace(/·/g, " "))
-      .filter((l) => l !== "");
   }
   saveConfig(state.cfg);
   flashSaved();

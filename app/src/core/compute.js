@@ -12,14 +12,13 @@ const DEFAULT_PARAMS = { minDia: 8, maxDia: 9, umbral: 8.5, pmNormal: 8, pmAlta:
 
 /**
  * @param {{rows:any[], issues:any[], tabs:any[]}} parsed  Resultado de parseTimesheetWorkbook (concatenado).
- * @param {any} cfg   Configuración (params, keywords, roster, aliases, jobcodes).
+ * @param {any} cfg   Configuración (params, roster, aliases, jobcodes).
  * @param {string} from ISO desde.
  * @param {string} to   ISO hasta.
  */
 export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
   const params = { ...DEFAULT_PARAMS, ...(cfg.params || {}) };
   const dedupe = !!opts.dedupe; // excluir filas duplicadas de los totales y del Excel
-  const keywords = (cfg.keywords || []).filter((k) => k !== "" && k != null);
   const known = new Set((cfg.jobcodes || []).map((j) => String(j[0]).toUpperCase()));
   const aliasMap = {};
   (cfg.aliases || []).forEach((a) => {
@@ -122,7 +121,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
       });
     }
 
-    row.auto = autoCount(row, person, keywords);
+    row.auto = autoCount(row, person);
     // Ajuste manual del PM: si existe override para esta fila, prevalece sobre auto.
     row.key = `${r.file}|${r.tab}|${r.row}`;
     row.override = overrides[row.key] === "Sí" || overrides[row.key] === "No" ? overrides[row.key] : "";
@@ -262,7 +261,6 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
 
   return {
     params,
-    keywords,
     days,
     weekdays,
     dev,
