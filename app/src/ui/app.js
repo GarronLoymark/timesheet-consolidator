@@ -342,6 +342,13 @@ function refreshWeeks() {
   }
 
   state.weeks = weeksFromRows(parsed.rows);
+  // Solo semanas vencidas (ya terminadas): oculta la semana en curso y futuras.
+  // La semana se considera vencida cuando su último día (domingo) ya pasó.
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  const todayIso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const vencidas = state.weeks.filter((w) => w.to < todayIso);
+  if (vencidas.length) state.weeks = vencidas; // si no hay ninguna, no rompemos la app
   el.week.innerHTML =
     state.weeks
       .map((w, i) => `<option value="${i}">${escapeHtml(w.label)} (${w.from} → ${w.to})</option>`)
