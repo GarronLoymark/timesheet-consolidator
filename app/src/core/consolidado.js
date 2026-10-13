@@ -13,7 +13,6 @@
 export function buildConsolidadoEntries(R, jobcodes) {
   const codeByClient = new Map(jobcodes.map((j) => [String(j[0]).toUpperCase(), j[1]]));
   const jobNum = (client) => (codeByClient.has(client.toUpperCase()) ? codeByClient.get(client.toUpperCase()) : "NO EXISTE");
-  const porTarea = new Map(R.pm.map((p) => [p.equipo + "|" + p.date, p.porTarea]));
 
   // Agrupar las filas DEV por equipo, respetando el orden en que aparecen.
   const order = [];
@@ -26,11 +25,11 @@ export function buildConsolidadoEntries(R, jobcodes) {
     byTeam.get(d.equipo).push(d);
   }
 
-  const mk = (d, res, hrs) => ({
+  const mk = (d, res, hrs, comm) => ({
     job: jobNum(d.client),
     client: d.client,
     task: d.task,
-    comm: d.comm || "",
+    comm: comm != null ? comm : d.comm || "",
     typ: d.typ || "",
     date: d.date,
     res,
@@ -42,17 +41,13 @@ export function buildConsolidadoEntries(R, jobcodes) {
   const entries = [];
   for (const team of order) {
     const devs = byTeam.get(team);
-    for (const d of devs) entries.push(mk(d, d.res, d.hrs));
-    // Filas espejo del PM: horas sin redondear para que la suma diaria sea 8 o 9.
-    // Solo en días con jornada de PM (hábiles); el PM no trabaja fines ni feriados.
+    for (const d of devs) entries.push(mk(d, d.res, d.hrs, d.comm || ""));
+    // Filas espejo del PM (ya marcadas en compute): reuniones exactas de-duplicadas
+    // y el trabajo de cliente promediado. Nada en fin de semana/feriado.
+    const pmName = R.teamPM[team] || "PM SIN ASIGNAR";
     for (const d of devs) {
-      const up = d.client.toUpperCase();
-      if (d.cuentaPMPersona === "No") continue;
-      if (up.startsWith("RKD") && up !== "RKD MTG" && up !== "RKD MTGINT") continue;
-      if (!porTarea.has(team + "|" + d.date)) continue; // fin de semana/feriado: sin PM
-      const pmName = R.teamPM[team] || "PM SIN ASIGNAR";
-      const hrs = d.auto === "Sí" ? porTarea.get(team + "|" + d.date) || 0 : 0;
-      entries.push(mk(d, pmName, hrs));
+      if (!d.pmMirror) continue;
+      entries.push(mk(d, pmName, d.pmHrs || 0, d.pmComment != null ? d.pmComment : d.comm || ""));
     }
   }
   return entries;

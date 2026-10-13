@@ -75,7 +75,7 @@ async function main() {
     it("RKD MTGINT con type 'Daily meeting' -> Sí", () => expect(autoCount(mk("RKD MTGINT", "daily meeting"))).toBe("Sí"));
     it("RKD MTG con otro type -> No", () => expect(autoCount(mk("RKD MTG", "Meeting"))).toBe("No"));
     it("RKD MTG sin type -> No", () => expect(autoCount(mk("RKD MTG", ""))).toBe("No"));
-    it("RKD TRAIN -> No", () => expect(autoCount(mk("RKD TRAIN", "Daily meeting"))).toBe("No"));
+    it("RKD TRAIN -> No", () => expect(autoCount(mk("RKD TRAIN", "Training"))).toBe("No"));
     it("cuentaPM=No con BFF -> No", () => expect(autoCount(mk("BFF"), { cuentaPM: "No" })).toBe("No"));
   });
 
@@ -144,7 +144,7 @@ async function main() {
       expect(p.tareas).toBe(tareas);
     };
     it("Email 01/10: 5 · 43.70 · 8.74 · 9 · 66", () => check("Email", "2026-10-01", 5, 43.7, 8.74, 9, 66));
-    it("Email 02/10: 5 · 40.00 · 8.00 · 8 · 67", () => check("Email", "2026-10-02", 5, 40, 8, 8, 67));
+    it("Email 02/10: 5 · 40.00 · 8.00 · 8 · 63 (daily de-duplicada)", () => check("Email", "2026-10-02", 5, 40, 8, 8, 63));
     it("QA 01/10: 7 · 56.00 · 8.00 · 8 · 78", () => check("QA", "2026-10-01", 7, 56, 8, 8, 78));
     it("QA 02/10: 7 · 56.00 · 8.00 · 8 · 88", () => check("QA", "2026-10-02", 7, 56, 8, 8, 88));
     it("Standard 01/10: 4 · 34.00 · 8.50 · 9 · 17", () => check("Standard", "2026-10-01", 4, 34, 8.5, 9, 17));
@@ -155,7 +155,7 @@ async function main() {
 
   describe("Caso · Copiar para el cliente (Consolidado B:I)", () => {
     const rows = buildConsolidadoRows(R, cfg.jobcodes.map((j) => [j[0], j[1]]));
-    it("total de filas = 790 (405 DEV + 385 espejo PM; sin PM en fin de semana)", () => expect(rows.length).toBe(790));
+    it("total de filas = 756 (405 DEV + 351 espejo PM; dailies de-duplicadas)", () => expect(rows.length).toBe(756));
     it("la suma de horas PM por equipo/día es exactamente 8 o 9", () => {
       const pmNames = new Set(Object.values(R.teamPM));
       const byKey = {};
@@ -222,6 +222,67 @@ async function main() {
     it("con ignorar=true desaparece de Validación", () => expect(val(Ri, "QA Dev 6")).toBe(undefined));
     it("con ignorar=true sus horas no se cuentan como registros DEV", () =>
       expect(Ri.dev.some((d) => d.res === "QA Dev 6")).toBe(false));
+  });
+
+  describe("Reuniones del PM (exactas + promedio + de-dup)", () => {
+    const mkRow = (res, client, task, typ, comm, hrs, n) => ({
+      kind: "data", file: "f", tab: res, row: n, seq: n,
+      client, task, taskUrl: "", comm, commUrl: "", typ, date: "2026-10-01", res, hrs,
+    });
+    const parsedM = {
+      rows: [
+        mkRow("Dev W", "BFF", "work1", "Build", "", 4, 1),
+        mkRow("Dev K", "BFF", "work2", "Build", "", 4, 2),
+        mkRow("Dev W", "RKD MTG", "daily", "Daily meeting", "", 0.25, 3),
+        mkRow("Dev K", "RKD MTG", "daily", "Daily meeting", "", 0.25, 4),
+        mkRow("Dev W", "RKD MTG", "1:1", "1:1 Meeting", "1:1 with PM", 0.5, 5),
+        mkRow("Dev W", "RKD MTG", "ops", "Meeting with ops", "ops sync", 0.5, 6),
+        mkRow("Dev K", "RKD MTG", "ops", "Meeting with ops", "ops sync", 0.5, 7),
+      ],
+      issues: [],
+      tabs: [],
+    };
+    const cfgM = {
+      params: { minDia: 8, maxDia: 9, umbral: 8.5, pmNormal: 8, pmAlta: 9 },
+      roster: [
+        { dev: "Guille", equipo: "X", pm: "Guille", tipo: "PM", cuentaPM: "Sí" },
+        { dev: "Dev W", equipo: "X", pm: "Guille", tipo: "Fijo", cuentaPM: "Sí" },
+        { dev: "Dev K", equipo: "X", pm: "Guille", tipo: "Fijo", cuentaPM: "Sí" },
+      ],
+      aliases: [],
+      feriados: [],
+      jobcodes: [["BFF", "100"], ["RKD MTG", "200"]],
+    };
+    const RM = compute(parsedM, cfgM, "2026-10-01", "2026-10-01");
+    const pmX = RM.pm.find((p) => p.equipo === "X");
+    const consM = buildConsolidadoRows(RM, cfgM.jobcodes);
+    const pmRowsM = consM.filter((r) => r[6] === "Guille"); // [job,client,task,comm,typ,date,res,hrs]
+    const sum = (arr) => Math.round(arr.reduce((s, r) => s + r[7], 0) * 100) / 100;
+
+    it("horas PM del día = 8", () => expect(pmX.horasPM).toBe(8));
+    it("filas espejo del PM = 5 (daily+1:1+ops+2 cliente)", () => expect(pmX.tareas).toBe(5));
+    it("la suma de horas del PM = 8", () => expect(sum(pmRowsM)).toBe(8));
+    it("una sola daily con 0.25 exacta", () => {
+      const dailies = pmRowsM.filter((r) => r[4] === "Daily meeting");
+      expect(dailies.length).toBe(1);
+      expect(dailies[0][7]).toBeCloseTo(0.25, 2);
+    });
+    it("una sola ops con 0.5 exacta (de-duplicada)", () => {
+      const ops = pmRowsM.filter((r) => /ops/i.test(r[4]));
+      expect(ops.length).toBe(1);
+      expect(ops[0][7]).toBeCloseTo(0.5, 2);
+    });
+    it("1:1 con etiqueta '1:1 Dev W' y 0.5 exacta", () => {
+      const uno = pmRowsM.filter((r) => r[4] === "1:1 Meeting");
+      expect(uno.length).toBe(1);
+      expect(uno[0][7]).toBeCloseTo(0.5, 2);
+      expect(uno[0][3]).toBe("1:1 Dev W");
+    });
+    it("el resto (6.75) se reparte entre las 2 tareas de cliente (3.375 c/u)", () => {
+      const cli = pmRowsM.filter((r) => r[1] === "BFF");
+      expect(cli.length).toBe(2);
+      cli.forEach((r) => expect(r[7]).toBeCloseTo(3.375, 3));
+    });
   });
 
   render(out);

@@ -6,7 +6,7 @@ import { key, clean } from "./text.js";
 import { daysBetween, isWeekend, fmtDay } from "./dates.js";
 import { weekLabel } from "./weeks.js";
 import { normClient, closestJobCode } from "./jobcodes.js";
-import { autoCount } from "./rules.js";
+import { autoCount, meetingKind } from "./rules.js";
 
 const DEFAULT_PARAMS = { minDia: 8, maxDia: 9, umbral: 8.5, pmNormal: 8, pmAlta: 9 };
 
@@ -122,6 +122,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
     }
 
     row.auto = autoCount(row, person);
+    row.meetingKind = meetingKind(row); // "daily"|"ops"|"1on1"|"" (reunión exacta del PM)
     // Ajuste manual del PM: si existe override para esta fila, prevalece sobre auto.
     row.key = `${r.file}|${r.tab}|${r.row}`;
     row.override = overrides[row.key] === "Sí" || overrides[row.key] === "No" ? overrides[row.key] : "";
@@ -232,6 +233,8 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
     });
 
   // Horas del PM por equipo y día hábil. Sin PM asignado no se calcula ni se muestra.
+  // Reuniones del PM (daily/ops/1:1) van con su hora exacta y de-duplicadas; el
+  // resto del presupuesto (8/9) se promedia entre el trabajo de cliente.
   const teams = [...new Set(dev.map((r) => r.equipo))].sort();
   const pm = [];
   for (const t of teams) {
@@ -241,8 +244,49 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
       const devsFijos = fixedVal.filter((v) => v.perDay[d] > 0).length;
       const horasFijos = fixedVal.reduce((s, v) => s + v.perDay[d], 0);
       const prom = devsFijos ? horasFijos / devsFijos : 0;
-      const tareas = dev.filter((r) => r.equipo === t && r.date === d && r.final === "Sí").length;
-      const horasPM = tareas === 0 ? 0 : prom >= params.umbral ? params.pmAlta : params.pmNormal;
+
+      const counting = dev.filter((r) => r.equipo === t && r.date === d && r.final === "Sí");
+      const horasPM = counting.length === 0 ? 0 : prom >= params.umbral ? params.pmAlta : params.pmNormal;
+
+      // Reuniones exactas (de-duplicadas): daily = 1 por equipo/día; ops = 1 por
+      // (type+comment+horas); 1:1 = por dev. El resto es trabajo de cliente.
+      const exact = []; // filas que generan espejo de PM con su hora exacta
+      const clientRows = [];
+      const seenDaily = new Set();
+      const seenOps = new Set();
+      for (const r of counting) {
+        const k = r.meetingKind;
+        if (!k) {
+          clientRows.push(r);
+          continue;
+        }
+        if (k === "daily") {
+          if (seenDaily.has(t)) continue; // solo una daily por equipo/día
+          seenDaily.add(t);
+        } else if (k === "ops") {
+          const sig = `${(r.typ || "").trim().toLowerCase()}|${(r.comm || "").trim().toLowerCase()}|${r.hrs}`;
+          if (seenOps.has(sig)) continue; // misma reunión con ops: una sola
+          seenOps.add(sig);
+        }
+        exact.push(r);
+      }
+
+      // Marcar en cada fila si genera espejo de PM y con cuántas horas.
+      for (const r of counting) r.pmMirror = false;
+      let sumExact = 0;
+      for (const r of exact) {
+        r.pmMirror = true;
+        r.pmHrs = r.hrs;
+        if (r.meetingKind === "1on1") r.pmComment = `1:1 ${r.res}`;
+        sumExact += r.hrs;
+      }
+      const remaining = Math.max(0, horasPM - sumExact);
+      const perClient = clientRows.length ? remaining / clientRows.length : 0;
+      for (const r of clientRows) {
+        r.pmMirror = true;
+        r.pmHrs = perClient;
+      }
+
       pm.push({
         equipo: t,
         date: d,
@@ -251,8 +295,10 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
         horasFijos,
         prom,
         horasPM,
-        tareas,
-        porTarea: tareas ? horasPM / tareas : 0,
+        tareas: exact.length + clientRows.length, // filas espejo del PM
+        exactHrs: sumExact,
+        clientTareas: clientRows.length,
+        porTarea: perClient,
       });
     }
   }
