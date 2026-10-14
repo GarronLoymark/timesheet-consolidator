@@ -178,6 +178,18 @@ async function main() {
       const v = RH.validation.find((x) => x.dev === "Email Dev 3");
       expect(v.min).toBe(8);
     });
+    it("el feriado le pone Holiday de 8 h al PM (uno por equipo)", () => {
+      const hols = RH.pmHolidays.filter((h) => h.date === "2026-10-01");
+      expect(hols.length).toBe(4); // Email, QA, Standard, Web
+      expect(hols.every((h) => h.hrs === 8)).toBe(true);
+    });
+    it("el Consolidado incluye la fila Holiday del PM (8 h, Type Holiday)", () => {
+      const rowsH = buildConsolidadoRows(RH, cfgH.jobcodes.map((j) => [j[0], j[1]]));
+      const pmNames = new Set(Object.values(RH.teamPM));
+      const holRows = rowsH.filter((r) => pmNames.has(r[6]) && r[4] === "Holiday");
+      expect(holRows.length).toBe(4);
+      expect(holRows.every((r) => r[7] === 8)).toBe(true);
+    });
   });
 
   describe("Ajuste manual Sí/No (override)", () => {

@@ -305,6 +305,17 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
 
   const weekendTasks = dev.filter((r) => isWeekend(r.date) && r.final === "Sí").length;
 
+  // Feriados configurados en día hábil: el PM no trabaja, recibe Holiday de 8 h
+  // (no se promedia ese día). Un entry por equipo con PM.
+  const holidayDays = days.filter((d) => !isWeekend(d) && isHoliday(d));
+  const pmHolidays = [];
+  for (const t of teams) {
+    if (!teamPM[t]) continue;
+    for (const d of holidayDays) {
+      pmHolidays.push({ equipo: t, date: d, pm: teamPM[t], nombre: holidayNames[d] || "Holiday", hrs: params.pmNormal });
+    }
+  }
+
   return {
     params,
     days,
@@ -312,6 +323,7 @@ export function compute(parsed, cfg, from, to, overrides = {}, opts = {}) {
     dev,
     validation,
     pm,
+    pmHolidays,
     issues,
     teamPM,
     from,

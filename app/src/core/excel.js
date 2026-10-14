@@ -193,6 +193,18 @@ export async function buildXlsx(ExcelJS, R, jobcodes) {
     [5, 6, 9].forEach((c) => (wsH.getCell(hr, c).numFmt = "0.00"));
     hr++;
   }
+  // Feriados: el PM recibe Holiday de 8 h (no se promedia ese día).
+  for (const h of R.pmHolidays || []) {
+    wsH.getCell(hr, 1).value = h.equipo;
+    const dc = wsH.getCell(hr, 2);
+    dc.value = toDate(h.date);
+    dc.numFmt = "dd/mm/yyyy";
+    wsH.getCell(hr, 3).value = h.pm;
+    wsH.getCell(hr, 7).value = h.hrs;
+    wsH.getCell(hr, 8).value = `Holiday · ${h.nombre || ""}`.trim();
+    wsH.getCell(hr, 10).value = h.hrs;
+    hr++;
+  }
   wsH.getCell(hr, 1).value = "TOTAL";
   wsH.getCell(hr, 1).font = FB;
   [5, 7, 8, 10].forEach((c) => {

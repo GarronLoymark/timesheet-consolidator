@@ -38,6 +38,13 @@ export function buildConsolidadoEntries(R, jobcodes) {
     pm: res !== d.res,
   });
 
+  // Holidays del PM por equipo (feriados configurados en día hábil).
+  const holsByTeam = new Map();
+  for (const h of R.pmHolidays || []) {
+    if (!holsByTeam.has(h.equipo)) holsByTeam.set(h.equipo, []);
+    holsByTeam.get(h.equipo).push(h);
+  }
+
   const entries = [];
   for (const team of order) {
     const devs = byTeam.get(team);
@@ -48,6 +55,21 @@ export function buildConsolidadoEntries(R, jobcodes) {
     for (const d of devs) {
       if (!d.pmMirror) continue;
       entries.push(mk(d, pmName, d.pmHrs || 0, d.pmComment != null ? d.pmComment : d.comm || ""));
+    }
+    // Feriados: el PM recibe Holiday de 8 h ese día.
+    for (const h of holsByTeam.get(team) || []) {
+      entries.push({
+        job: jobNum("RKD HOL"),
+        client: "RKD HOL",
+        task: h.nombre || "Holiday",
+        comm: "",
+        typ: "Holiday",
+        date: h.date,
+        res: h.pm,
+        hrs: h.hrs,
+        equipo: team,
+        pm: true,
+      });
     }
   }
   return entries;

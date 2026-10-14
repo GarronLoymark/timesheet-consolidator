@@ -121,6 +121,12 @@ export function validationTable(R, filtered, pag = {}) {
     t.perDay[p.date] = (t.perDay[p.date] || 0) + p.horasPM;
     t.total += p.horasPM;
   }
+  // Feriados: el PM recibe Holiday de 8 h ese día.
+  for (const h of R.pmHolidays || []) {
+    const t = (pmByTeam[h.equipo] ||= { pm: h.pm, perDay: {}, total: 0 });
+    t.perDay[h.date] = (t.perDay[h.date] || 0) + h.hrs;
+    t.total += h.hrs;
+  }
 
   let body = "";
   for (const team of Object.keys(rowsByTeam)) {
